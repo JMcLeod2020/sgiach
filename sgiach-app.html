@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sgiach - Your Winged View of Development</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 2;
+        }
+
+        .logo {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .description {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            background: #ff6b6b;
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .app-container {
+            background: white;
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .app-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .app-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .api-status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .api-status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .search-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .search-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .preferences-section {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .preferences-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .analyze-btn {
+            background: #667eea;
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .results-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .results-summary {
+            font-size: 1.2rem;
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .export-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .export-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+
+        .properties-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .property-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.15);
+        }
+
+        .property-header {
+            display: flex;
+            justify-content: between;
+            align-items: start;
+            margin-bottom: 20px;
+        }
+
+        .property-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .property-address {
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .property-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .scenarios-section {
+            margin-top: 30px;
+        }
+
+        .scenarios-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .scenario-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-card:hover {
+            border-color: #667eea;
+        }
+
+        .scenario-type {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .scenario-description {
+            color: #4a5568;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .scenario-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #f56565;
+        }
+
+        .info-message {
+            background: #e6fffa;
+            color: #234e52;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #38b2ac;
+        }
+
+        @media (max-width: 768px) {
+            .logo { font-size: 2.5rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .scenarios-grid { grid-template-columns: 1fr; }
+            .scenario-metrics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="hero-content">
+            <h1 class="logo">SGIACH</h1>
+            <p class="tagline">Your Winged View of Development</p>
+            <p class="description">
+                Advanced real estate development analysis powered by live market data, 
+                zoning intelligence, and financial modeling. Connect to live property listings 
+                and see development potential instantly.
+            </p>
+            <button class="cta-button" onclick="startApp()">Start Development Analysis</button>
+        </div>
+    </section>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="app">
+        <header class="app-header">
+            <div class="app-logo">SGIACH</div>
+            <div class="api-status" id="apiStatus">
+                <span id="statusIndicator">●</span>
+                <span id="statusText">Connecting to API...</span>
+            </div>
+            <button class="control-btn" onclick="testQuickAnalysis(); return false;" title="Test API Connection">🔍 Quick Test</button>
+        </header>
+
+        <!-- Search and Analysis Form -->
+        <section class="search-section">
+            <!-- Quick Test Section -->
+            <div style="background: #e6fffa; padding: 20px; border-radius: 15px; margin-bottom: 30px; border-left: 4px solid #38b2ac;">
+                <h3 style="color: #234e52; margin-bottom: 10px;">🚀 Quick Start</h3>
+                <p style="color: #234e52; margin-bottom: 15px;">Test your API connection and see sample analysis results instantly!</p>
+                <button onclick="testQuickAnalysis()" style="background: #38b2ac; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    🔍 Run Quick Analysis Test
+                </button>
+            </div>
+
+            <form class="search-form" id="analysisForm">
+                <h2 style="font-size: 1.8rem; font-weight: 700; color: #2d3748; margin-bottom: 20px;">
+                    Property Search & Analysis
+                </h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-input" id="city" value="Edmonton" placeholder="Edmonton">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Province</label>
+                        <select class="form-select" id="province">
+                            <option value="AB" selected>Alberta</option>
+                            <option value="BC">British Columbia</option>
+                            <option value="ON">Ontario</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Min Price ($)</label>
+                        <input type="number" class="form-input" id="minPrice" value="200000" placeholder="200000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Price ($)</label>
+                        <input type="number" class="form-input" id="maxPrice" value="2000000" placeholder="2000000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Property Types</label>
+                        <select class="form-select" id="propertyTypes" multiple>
+                            <option value="residential" selected>Residential</option>
+                            <option value="commercial" selected>Commercial</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="mixed">Mixed Use</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Timeline (months)</label>
+                        <input type="number" class="form-input" id="maxTimeline" value="36" placeholder="36">
+                    </div>
+                </div>
+
+                <div class="preferences-section">
+                    <h3 class="preferences-title">Developer Preferences</h3>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Risk Tolerance</span>
+                            <span id="riskValue">0.6</span>
+                        </div>
+                        <input type="range" class="slider" id="riskTolerance" min="0.1" max="1.0" step="0.1" value="0.6">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Minimum ROI Threshold (%)</span>
+                            <span id="roiValue">15</span>
+                        </div>
+                        <input type="range" class="slider" id="minROI" min="5" max="50" step="1" value="15">
+                    </div>
+                </div>
+
+                <button type="submit" class="analyze-btn" id="analyzeBtn">
+                    Analyze Development Opportunities
+                </button>
+            </form>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Analyzing properties and development scenarios...</p>
+            <p style="font-size: 0.9rem; color: #718096; margin-top: 10px;">
+                Scraping live listings from Realtor.ca, Kijiji, and RealtyLink...
+            </p>
+        </div>
+
+        <!-- Results Container -->
+        <section class="results-container" id="resultsContainer">
+            <div class="results-header">
+                <h2 class="results-title">Development Opportunities</h2>
+                <p class="results-summary" id="resultsSummary"></p>
+            </div>
+
+            <div class="export-controls">
+                <button class="export-btn" onclick="exportCSV()">📊 Export to CSV</button>
+                <button class="export-btn" onclick="exportPDF()">📄 Generate Report</button>
+                <button class="export-btn" onclick="newSearch()">🔍 New Search</button>
+            </div>
+
+            <div class="properties-grid" id="propertiesGrid">
+                <!-- Properties will be dynamically inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://127.0.0.1:8000'; // Your FastAPI endpoint
+        let currentAnalysisData = null;
+
+        // Initialize app
+        function startApp() {
+            document.getElementById('hero').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            checkAPIConnection();
+            setupEventListeners();
+        }
+
+        // Check API connection
+        async function checkAPIConnection() {
+            const statusElement = document.getElementById('apiStatus');
+            const indicatorElement = document.getElementById('statusIndicator');
+            const textElement = document.getElementById('statusText');
+
+            try {
+                // Use the /health endpoint since it exists
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    const healthData = await response.json();
+                    statusElement.className = 'api-status connected';
+                    indicatorElement.textContent = '●';
+                    textElement.textContent = `API Connected - ${healthData.message || 'Ready'}`;
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                // Fallback to root endpoint
+                try {
+                    const fallbackResponse = await fetch(`${API_BASE_URL}/`);
+                    if (fallbackResponse.ok) {
+                        statusElement.className = 'api-status connected';
+                        indicatorElement.textContent = '●';
+                        textElement.textContent = 'API Connected';
+                    } else {
+                        throw new Error('API not responding');
+                    }
+                } catch (fallbackError) {
+                    statusElement.className = 'api-status disconnected';
+                    indicatorElement.textContent = '●';
+                    textElement.textContent = 'API Disconnected - Using Test Data';
+                    
+                    showMessage('Cannot connect to Real Estate Analysis API. Using test data for demonstration.', 'info');
+                }
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Slider updates
+            document.getElementById('riskTolerance').addEventListener('input', (e) => {
+                document.getElementById('riskValue').textContent = e.target.value;
+            });
+
+            document.getElementById('minROI').addEventListener('input', (e) => {
+                document.getElementById('roiValue').textContent = e.target.value;
+            });
+
+            // Form submission
+            document.getElementById('analysisForm').addEventListener('submit', handleAnalysisSubmit);
+        }
+
+        // Handle form submission
+        async function handleAnalysisSubmit(e) {
+            e.preventDefault();
+            
+            const formData = getFormData();
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Analyzing...';
+            loadingSpinner.style.display = 'block';
+            
+            try {
+                const results = await performAnalysis(formData);
+                displayResults(results);
+            } catch (error) {
+                showError('Analysis failed: ' + error.message);
+            } finally {
+                // Reset button state
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Development Opportunities';
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Get form data
+        function getFormData() {
+            const propertyTypesSelect = document.getElementById('propertyTypes');
+            const selectedTypes = Array.from(propertyTypesSelect.selectedOptions).map(option => option.value);
+
+            return {
+                search_criteria: {
+                    city: document.getElementById('city').value,
+                    province: document.getElementById('province').value,
+                    min_price: parseInt(document.getElementById('minPrice').value),
+                    max_price: parseInt(document.getElementById('maxPrice').value)
+                },
+                preferences: {
+                    risk_tolerance: parseFloat(document.getElementById('riskTolerance').value),
+                    min_roi_threshold: parseFloat(document.getElementById('minROI').value),
+                    preferred_property_types: selectedTypes,
+                    max_development_timeline_months: parseInt(document.getElementById('maxTimeline').value)
+                }
+            };
+        }
+
+        // Perform analysis (calls your existing API)
+        async function performAnalysis(formData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                // Fallback to test data if API is unavailable
+                console.log('Using test data due to API error:', error);
+                return getTestData(formData);
+            }
+        }
+
+        // Test data fallback (simulates your API response structure)
+        function getTestData(formData) {
+            return {
+                summary: {
+                    total_properties_found: 15,
+                    properties_analyzed: 12,
+                    avg_roi: 28.5,
+                    top_opportunity_roi: 45.2
+                },
+                opportunities: [
+                    {
+                        property: {
+                            address: "10542 82 Avenue NW, Edmonton, AB",
+                            price: 850000,
+                            lot_size: 0.12,
+                            zoning: "RA7",
+                            source: "Realtor.ca"
+                        },
+                        scenarios: [
+                            {
+                                type: "Mid-Rise Apartment",
+                                description: "4-story, 24-unit residential building with ground floor commercial",
+                                zoning_compliance: "RA7 - Compliant",
+                                financial_analysis: {
+                                    total_development_cost: 2400000,
+                                    projected_value: 3200000,
+                                    roi_percentage: 33.3,
+                                    payback_period_months: 22,
+                                    net_profit: 800000
+                                },
+                                timeline_months: 18,
+                                risk_score: 0.4
+                            }
+                        ],
+                        score: 8.7
+                    },
+                    {
+                        property: {
+                            address: "8720 118 Avenue NW, Edmonton, AB",
+                            price: 1200000,
+                            lot_size: 0.18,
+                            zoning: "CB1",
+                            source: "Kijiji"
+                        },
+                        scenarios: [
+                            {
+                                type: "Mixed-Use Development",
+                                description: "3-story mixed-use with retail and office space",
+                                zoning_compliance: "CB1 - Compliant",
+                                financial_analysis: {
+                                    total_development_cost: 3800000,
+                                    projected_value: 4900000,
+                                    roi_percentage: 28.9,
+                                    payback_period_months: 26,
+                                    net_profit: 1100000
+                                },
+                                timeline_months: 24,
+                                risk_score: 0.5
+                            }
+                        ],
+                        score: 8.2
+                    }
+                ],
+                analysis_timestamp: new Date().toISOString(),
+                data_sources: ["Realtor.ca", "Kijiji", "RealtyLink"]
+            };
+        }
+
+        // Display results
+        function displayResults(results) {
+            currentAnalysisData = results;
+            
+            // Update summary
+            const summaryElement = document.getElementById('resultsSummary');
+            summaryElement.textContent = 
+                `Found ${results.summary.total_properties_found} properties, analyzed ${results.summary.properties_analyzed} opportunities. ` +
+                `Average ROI: ${results.summary.avg_roi}%. Top opportunity: ${results.summary.top_opportunity_roi}% ROI.`;
+
+            // Clear and populate properties grid
+            const gridElement = document.getElementById('propertiesGrid');
+            gridElement.innerHTML = '';
+
+            results.opportunities.forEach((opportunity, index) => {
+                const propertyCard = createPropertyCard(opportunity, index + 1);
+                gridElement.appendChild(propertyCard);
+            });
+
+            // Show results container
+            document.getElementById('resultsContainer').style.display = 'block';
+            document.getElementById('resultsContainer').scrollIntoView({behavior: 'smooth'});
+        }
+
+        // Create property card element
+        function createPropertyCard(opportunity, rank) {
+            const card = document.createElement('div');
+            card.className = 'property-card';
+            
+            const property = opportunity.property;
+            const mainScenario = opportunity.scenarios[0];
+            
+            card.innerHTML = `
+                <div class="property-header">
+                    <div>
+                        <div class="property-title">#${rank} - ${property.address}</div>
+                        <div class="property-address">Zoning: ${property.zoning} | Lot: ${property.lot_size} acres | Source: ${property.source}</div>
+                        <div class="property-price">$${property.price.toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                <div class="scenarios-section">
+                    <div class="scenarios-title">Development Scenarios</div>
+                    <div class="scenarios-grid">
+                        ${opportunity.scenarios.map(scenario => `
+                            <div class="scenario-card">
+                                <div class="scenario-type">${scenario.type}</div>
+                                <div class="scenario-description">${scenario.description}</div>
+                                <div class="scenario-metrics">
+                                    <div class="metric">
+                                        <div class="metric-value">${scenario.financial_analysis.roi_percentage}%</div>
+                                        <div class="metric-label">ROI</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">${scenario.timeline_months}mo</div>
+                                        <div class="metric-label">Timeline</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">$${(scenario.financial_analysis.total_development_cost / 1000000).toFixed(1)}M</div>
+                                        <div class="metric-label">Investment</div>
+                                    </div>
+                                    <div class="metric">
+                                        <div class="metric-value">$${(scenario.financial_analysis.net_profit / 1000).toFixed(0)}K</div>
+                                        <div class="metric-label">Net Profit</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Test quick analysis endpoint
+        async function testQuickAnalysis() {
+            try {
+                showMessage('Testing quick analysis endpoint...', 'info');
+                const response = await fetch(`${API_BASE_URL}/quick-analysis`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage(`Quick analysis successful! Found ${data.summary?.total_properties_found || 'some'} properties.`, 'success');
+                    
+                    // Optionally display the quick results
+                    if (data.opportunities && data.opportunities.length > 0) {
+                        displayResults(data);
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showMessage(`Quick analysis failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Export functions
+        function exportCSV() {
+            if (!currentAnalysisData) return;
+            
+            let csv = 'Rank,Address,Price,Zoning,ROI,Timeline,Investment,Profit\n';
+            
+            currentAnalysisData.opportunities.forEach((opp, index) => {
+                const prop = opp.property;
+                const scenario = opp.scenarios[0];
+                const fa = scenario.financial_analysis;
+                
+                csv += `${index + 1},"${prop.address}",${prop.price},${prop.zoning},${fa.roi_percentage},${scenario.timeline_months},${fa.total_development_cost},${fa.net_profit}\n`;
+            });
+            
+            downloadFile(csv, 'sgiach-analysis.csv', 'text/csv');
+            showMessage('Analysis exported to CSV successfully!', 'success');
+        }
+
+        function exportPDF() {
+            showMessage('PDF report generation coming soon!', 'info');
+        }
+
+        function newSearch() {
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('analysisForm').scrollIntoView({behavior: 'smooth'});
+            currentAnalysisData = null;
+        }
+
+        // Utility functions
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showMessage(text, type = 'info') {
+            console.log(`${type.toUpperCase()}: ${text}`);
+            
+            // Create visible toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-weight: 600;
+                max-width: 350px;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            toast.textContent = text;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after delay
+            setTimeout(() => {
+                toast.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('.search-section').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Auto-connect when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we should auto-start (for testing)
+            if (window.location.hash === '#app') {
+                startApp();
+            }
+        });
+    </script>
+</body>
+</html>
