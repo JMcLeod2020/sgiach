@@ -1,7 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-import pandas as pd
 import json
 from datetime import datetime
 import random
@@ -12,7 +10,7 @@ import csv
 app = FastAPI(
     title="Sgiach Real Estate Analysis API", 
     version="1.0.0",
-    description="Your Winged View of Development - Professional Real Estate Analysis Platform"
+    description="Your Winged View of Development"
 )
 
 app.add_middleware(
@@ -33,268 +31,57 @@ async def root():
         "tagline": "Your Winged View of Development",
         "status": "🟢 ONLINE",
         "version": "1.0.0",
-        "description": "Professional real estate development analysis platform for Alberta properties",
-        "capabilities": [
-            "📊 Real estate data upload and processing",
-            "🏗️ Development scenario analysis", 
-            "💰 ROI and financial modeling",
-            "📍 Location-based opportunity ranking",
-            "📈 Investment risk assessment"
-        ],
         "api_endpoints": {
-            "health_check": "/health",
-            "property_analysis": "/quick-analysis", 
-            "upload_properties": "/upload-properties",
-            "analyze_specific": "/analyze-property/{property_id}",
-            "list_all_properties": "/properties",
-            "documentation": "/docs"
+            "health": "/health",
+            "analysis": "/quick-analysis", 
+            "upload": "/upload-properties",
+            "properties": "/properties"
         },
-        "powered_by": "SkyeBridge Consulting & Developments Inc.",
         "contact": "jeff@skyebridgedevelopments.ca"
     }
 
 @app.get("/health")
 async def health_check():
     return {
-        "🏥 SYSTEM STATUS": {
-            "status": "✅ HEALTHY",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "uptime": "Active",
-            "api_version": "1.0.0"
-        },
-        "📊 DATABASE STATUS": {
-            "properties_loaded": f"{len(property_database)} properties",
-            "data_source": "Real Alberta Properties" if property_database else "Sample Data",
-            "last_update": property_database[-1]["uploaded_at"] if property_database else "No uploads yet"
-        },
-        "🚀 READY FOR": [
-            "Property data upload",
-            "Development analysis", 
-            "Investment calculations",
-            "Professional reporting"
-        ]
+        "status": "✅ HEALTHY",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "properties_loaded": len(property_database)
     }
 
 @app.post("/upload-properties")
 async def upload_properties(file: UploadFile):
-    """Upload CSV file with real property data - SAFE VERSION"""
+    """Upload CSV file with Alberta property data"""
     try:
         if not file or not file.filename:
-            raise HTTPException(status_code=422, detail="❌ No file provided")
+            raise HTTPException(status_code=422, detail="No file provided")
             
         if not file.filename.lower().endswith('.csv'):
-            raise HTTPException(status_code=400, detail="❌ File must be CSV format")
+            raise HTTPException(status_code=400, detail="File must be CSV format")
         
         content = await file.read()
         csv_string = content.decode('utf-8')
         
-        # Clear existing and parse new
+        # Clear existing data
         property_database.clear()
+        
+        # Parse CSV
         csv_reader = csv.DictReader(StringIO(csv_string))
         new_properties = []
         
         for row in csv_reader:
-            # Debug first row to see all available keys
-            if len(new_properties) == 0:
-                print("Available CSV columns:", list(row.keys()))
-            
-            # Extract data using exact column names from your CSV
-            price_raw = row.get('Price', '0')
+            # Extract price safely
+            price_text = row.get('Price', '0')
             try:
-                price = float(str(price_raw).replace('
-        
-        property_database.extend(new_properties)
-        
-        return {
-            "🎉 UPLOAD SUCCESS": {
-                "message": f"Successfully processed {len(new_properties)} Alberta properties",
-                "properties_added": len(new_properties),
-                "total_properties_in_database": len(property_database),
-                "upload_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            },
-            "📊 DATA SUMMARY": {
-                "file_name": file.filename,
-                "properties_processed": len(new_properties),
-                "data_source": "Real Alberta Properties - Realtor.ca Export"
-            },
-            "🔍 FIRST 3 PROPERTIES": [
-                {
-                    "id": prop["id"],
-                    "address": prop["address"], 
-                    "city": prop["city"],
-                    "price": f"${prop['price']:,.0f}"
-                } for prop in new_properties[:3]
-            ],
-            "✅ NEXT STEPS": [
-                "Visit /quick-analysis for development opportunities",
-                "Use /analyze-property/{property_id} for detailed analysis"
-            ]
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"❌ Error: {str(e)}")
-
-@app.get("/quick-analysis")
-async def quick_analysis():
-    """Professional real estate development analysis overview"""
-    if property_database:
-        # Use real uploaded properties
-        sample_properties = random.sample(property_database, min(5, len(property_database)))
-        analyzed_opportunities = []
-        
-        for prop in sample_properties:
-            analysis = run_development_analysis(prop)
-            analyzed_opportunities.append({
-                "🏠 PROPERTY": {
-                    "id": prop["id"],
-                    "address": prop["address"],
-                    "city": prop["city"],
-                    "current_price": f"${prop['price']:,.0f}",
-                    "property_type": prop["property_type"],
-                    "zoning": prop["zoning"]
-                },
-                "💰 FINANCIAL ANALYSIS": analysis["financial_summary"],
-                "⭐ RECOMMENDATION": {
-                    "scenario": analysis["recommended_scenario"]["scenario_name"],
-                    "grade": get_investment_grade(analysis["recommended_scenario"]["roi_percent"]),
-                    "timeline": get_timeline_category(analysis["recommended_scenario"]["timeline_months"])
-                }
-            })
-        
-        # Sort by ROI
-        analyzed_opportunities.sort(key=lambda x: float(x["💰 FINANCIAL ANALYSIS"]["roi_percentage"].rstrip('%')), reverse=True)
-        
-        return {
-            "🦅 SGIACH DEVELOPMENT ANALYSIS": {
-                "platform": "Your Winged View of Development",
-                "analysis_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "data_source": "✅ Real Alberta Properties (Realtor.ca)",
-                "properties_analyzed": len(analyzed_opportunities)
-            },
-            "📊 MARKET OVERVIEW": {
-                "total_properties_available": len(property_database),
-                "analysis_sample": f"Top {len(analyzed_opportunities)} opportunities",
-                "market_focus": "Edmonton Metropolitan Area",
-                "currency": "CAD"
-            },
-            "🏆 DEVELOPMENT OPPORTUNITIES": analyzed_opportunities,
-            "🤝 PROFESSIONAL SERVICES": {
-                "company": "SkyeBridge Consulting & Developments Inc.",
-                "contact": "jeff@skyebridgedevelopments.ca",
-                "phone": "780.218.1178"
-            }
-        }
-    else:
-        return {
-            "🦅 SGIACH DEVELOPMENT ANALYSIS": {
-                "status": "⚠️ No real property data loaded",
-                "message": "Upload Alberta property data to see live analysis"
-            }
-        }
-
-def get_investment_grade(roi):
-    """Assign investment grade based on ROI"""
-    if roi >= 50: return "🌟 EXCELLENT (A+)"
-    elif roi >= 30: return "⭐ VERY GOOD (A)"
-    elif roi >= 20: return "✅ GOOD (B+)"
-    elif roi >= 15: return "🔶 FAIR (B)"
-    else: return "⚠️ CAUTION (C)"
-
-def get_timeline_category(months):
-    """Categorize timeline"""
-    if months <= 18: return "⚡ FAST TRACK"
-    elif months <= 30: return "🚀 STANDARD"
-    else: return "🐌 EXTENDED"
-
-def run_development_analysis(property_data):
-    """Run professional development analysis on a real property"""
-    price = property_data["price"]
-    zoning = property_data["zoning"]
-    property_type = property_data["property_type"]
-    
-    scenarios = []
-    
-    if "Agricultural" in zoning or "Agricultural" in property_type:
-        scenarios.append({
-            "scenario_name": "🏘️ Residential Subdivision",
-            "description": "Convert agricultural land to residential development",
-            "development_cost": price * 0.4,
-            "potential_value": price * 2.2,
-            "timeline_months": 36,
-            "roi_percent": 75.0,
-            "risk_level": "Medium"
-        })
-    
-    if "Commercial" in zoning or "Commercial" in property_type:
-        scenarios.append({
-            "scenario_name": "🏢 Commercial Development", 
-            "description": "Develop retail/office commercial space",
-            "development_cost": price * 0.6,
-            "potential_value": price * 1.8,
-            "timeline_months": 24,
-            "roi_percent": 45.0,
-            "risk_level": "Low"
-        })
-    
-    if "Industrial" in zoning or "Industrial" in property_type:
-        scenarios.append({
-            "scenario_name": "🏭 Industrial Complex",
-            "description": "Develop warehouse/manufacturing facilities", 
-            "development_cost": price * 0.5,
-            "potential_value": price * 2.0,
-            "timeline_months": 30,
-            "roi_percent": 60.0,
-            "risk_level": "Medium"
-        })
-    
-    if not scenarios:
-        scenarios.append({
-            "scenario_name": "🔄 General Development",
-            "description": "Multi-purpose development opportunity",
-            "development_cost": price * 0.3,
-            "potential_value": price * 1.5,
-            "timeline_months": 24,
-            "roi_percent": 25.0,
-            "risk_level": "Medium"
-        })
-    
-    best_scenario = max(scenarios, key=lambda x: x["roi_percent"])
-    
-    return {
-        "scenarios": scenarios,
-        "recommended_scenario": best_scenario,
-        "financial_summary": {
-            "current_property_value": f"${price:,.0f}",
-            "total_investment_required": f"${price + best_scenario['development_cost']:,.0f}",
-            "projected_developed_value": f"${best_scenario['potential_value']:,.0f}",
-            "estimated_net_profit": f"${best_scenario['potential_value'] - (price + best_scenario['development_cost']):,.0f}",
-            "roi_percentage": f"{best_scenario['roi_percent']:.1f}%",
-            "payback_period_months": best_scenario["timeline_months"],
-            "annual_roi": f"{(best_scenario['roi_percent'] / best_scenario['timeline_months']) * 12:.1f}%"
-        }
-    }
-
-@app.get("/properties")
-async def list_properties():
-    """List all uploaded properties"""
-    return {
-        "📋 PROPERTY DATABASE": {
-            "total_properties": len(property_database),
-            "data_source": "Real Alberta Properties" if property_database else "No data loaded"
-        },
-        "🏠 SAMPLE PROPERTIES": property_database[:5] if property_database else []
-    }
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port), '').replace(',', '').strip()) if price_raw else 0
+                # Remove dollar signs, commas, spaces
+                clean_price = str(price_text).replace('$', '').replace(',', '').replace(' ', '').strip()
+                price = float(clean_price) if clean_price else 0
             except:
                 price = 0
-                
-            time_raw = row.get('Time_on_Market', '0')
+            
+            # Extract time on market safely  
+            time_text = row.get('Time_on_Market', '0')
             try:
-                time_on_market = int(float(str(time_raw).strip())) if time_raw else 0
+                time_on_market = int(float(str(time_text).strip())) if time_text else 0
             except:
                 time_on_market = 0
                 
@@ -304,202 +91,149 @@ if __name__ == "__main__":
                 "city": row.get('City', 'Unknown City'), 
                 "province": row.get('Province', 'AB'),
                 "price": price,
-                "property_type": row.get('Property_Type', 'Unknown Type'),
+                "property_type": row.get('Property_Type', 'Unknown'),
                 "land_size_sqft": row.get('Land_Size_SqFt', ''),
-                "zoning": row.get('Zoning', 'Unknown Zoning'),
+                "zoning": row.get('Zoning', 'Unknown'),
                 "features": row.get('Features', ''),
                 "time_on_market": time_on_market,
-                "listing_agent": row.get('Listing_Agent', 'Unknown Agent'),
-                "brokerage": row.get('Brokerage', 'Unknown Brokerage'),
+                "listing_agent": row.get('Listing_Agent', 'Unknown'),
+                "brokerage": row.get('Brokerage', 'Unknown'),
                 "uploaded_at": datetime.now().isoformat()
             }
-            
-            # Debug first property to verify data extraction
-            if len(new_properties) == 0:
-                print("First property extracted:", property_data)
-            
             new_properties.append(property_data)
         
         property_database.extend(new_properties)
         
         return {
-            "🎉 UPLOAD SUCCESS": {
-                "message": f"Successfully processed {len(new_properties)} Alberta properties",
-                "properties_added": len(new_properties),
-                "total_properties_in_database": len(property_database),
-                "upload_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            },
-            "📊 DATA SUMMARY": {
-                "file_name": file.filename,
-                "properties_processed": len(new_properties),
-                "data_source": "Real Alberta Properties - Realtor.ca Export"
-            },
-            "🔍 FIRST 3 PROPERTIES": [
+            "🎉 SUCCESS": f"Uploaded {len(new_properties)} Alberta properties",
+            "total_properties": len(property_database),
+            "sample_data": [
                 {
                     "id": prop["id"],
                     "address": prop["address"], 
                     "city": prop["city"],
                     "price": f"${prop['price']:,.0f}"
                 } for prop in new_properties[:3]
-            ],
-            "✅ NEXT STEPS": [
-                "Visit /quick-analysis for development opportunities",
-                "Use /analyze-property/{property_id} for detailed analysis"
             ]
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"❌ Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.get("/quick-analysis")
 async def quick_analysis():
-    """Professional real estate development analysis overview"""
-    if property_database:
-        # Use real uploaded properties
-        sample_properties = random.sample(property_database, min(5, len(property_database)))
-        analyzed_opportunities = []
-        
-        for prop in sample_properties:
-            analysis = run_development_analysis(prop)
-            analyzed_opportunities.append({
-                "🏠 PROPERTY": {
-                    "id": prop["id"],
-                    "address": prop["address"],
-                    "city": prop["city"],
-                    "current_price": f"${prop['price']:,.0f}",
-                    "property_type": prop["property_type"],
-                    "zoning": prop["zoning"]
-                },
-                "💰 FINANCIAL ANALYSIS": analysis["financial_summary"],
-                "⭐ RECOMMENDATION": {
-                    "scenario": analysis["recommended_scenario"]["scenario_name"],
-                    "grade": get_investment_grade(analysis["recommended_scenario"]["roi_percent"]),
-                    "timeline": get_timeline_category(analysis["recommended_scenario"]["timeline_months"])
-                }
-            })
-        
-        # Sort by ROI
-        analyzed_opportunities.sort(key=lambda x: float(x["💰 FINANCIAL ANALYSIS"]["roi_percentage"].rstrip('%')), reverse=True)
-        
+    """Real estate development analysis"""
+    if not property_database:
         return {
-            "🦅 SGIACH DEVELOPMENT ANALYSIS": {
-                "platform": "Your Winged View of Development",
-                "analysis_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "data_source": "✅ Real Alberta Properties (Realtor.ca)",
-                "properties_analyzed": len(analyzed_opportunities)
-            },
-            "📊 MARKET OVERVIEW": {
-                "total_properties_available": len(property_database),
-                "analysis_sample": f"Top {len(analyzed_opportunities)} opportunities",
-                "market_focus": "Edmonton Metropolitan Area",
-                "currency": "CAD"
-            },
-            "🏆 DEVELOPMENT OPPORTUNITIES": analyzed_opportunities,
-            "🤝 PROFESSIONAL SERVICES": {
-                "company": "SkyeBridge Consulting & Developments Inc.",
-                "contact": "jeff@skyebridgedevelopments.ca",
-                "phone": "780.218.1178"
-            }
+            "🦅 SGIACH ANALYSIS": "No properties loaded",
+            "message": "Upload Alberta property data first"
         }
-    else:
-        return {
-            "🦅 SGIACH DEVELOPMENT ANALYSIS": {
-                "status": "⚠️ No real property data loaded",
-                "message": "Upload Alberta property data to see live analysis"
-            }
-        }
-
-def get_investment_grade(roi):
-    """Assign investment grade based on ROI"""
-    if roi >= 50: return "🌟 EXCELLENT (A+)"
-    elif roi >= 30: return "⭐ VERY GOOD (A)"
-    elif roi >= 20: return "✅ GOOD (B+)"
-    elif roi >= 15: return "🔶 FAIR (B)"
-    else: return "⚠️ CAUTION (C)"
-
-def get_timeline_category(months):
-    """Categorize timeline"""
-    if months <= 18: return "⚡ FAST TRACK"
-    elif months <= 30: return "🚀 STANDARD"
-    else: return "🐌 EXTENDED"
-
-def run_development_analysis(property_data):
-    """Run professional development analysis on a real property"""
-    price = property_data["price"]
-    zoning = property_data["zoning"]
-    property_type = property_data["property_type"]
     
-    scenarios = []
+    # Use real properties
+    sample_size = min(5, len(property_database))
+    sample_properties = random.sample(property_database, sample_size)
+    analyzed_opportunities = []
     
-    if "Agricultural" in zoning or "Agricultural" in property_type:
-        scenarios.append({
-            "scenario_name": "🏘️ Residential Subdivision",
-            "description": "Convert agricultural land to residential development",
-            "development_cost": price * 0.4,
-            "potential_value": price * 2.2,
-            "timeline_months": 36,
-            "roi_percent": 75.0,
-            "risk_level": "Medium"
+    for prop in sample_properties:
+        analysis = analyze_property_simple(prop)
+        analyzed_opportunities.append({
+            "🏠 PROPERTY": {
+                "id": prop["id"],
+                "address": prop["address"],
+                "city": prop["city"],
+                "price": f"${prop['price']:,.0f}",
+                "type": prop["property_type"],
+                "zoning": prop["zoning"]
+            },
+            "💰 ANALYSIS": {
+                "roi": f"{analysis['roi']:.1f}%",
+                "profit": f"${analysis['profit']:,.0f}",
+                "investment": f"${analysis['investment']:,.0f}",
+                "grade": analysis['grade']
+            },
+            "⭐ SCENARIO": analysis['scenario']
         })
     
-    if "Commercial" in zoning or "Commercial" in property_type:
-        scenarios.append({
-            "scenario_name": "🏢 Commercial Development", 
-            "description": "Develop retail/office commercial space",
-            "development_cost": price * 0.6,
-            "potential_value": price * 1.8,
-            "timeline_months": 24,
-            "roi_percent": 45.0,
-            "risk_level": "Low"
-        })
-    
-    if "Industrial" in zoning or "Industrial" in property_type:
-        scenarios.append({
-            "scenario_name": "🏭 Industrial Complex",
-            "description": "Develop warehouse/manufacturing facilities", 
-            "development_cost": price * 0.5,
-            "potential_value": price * 2.0,
-            "timeline_months": 30,
-            "roi_percent": 60.0,
-            "risk_level": "Medium"
-        })
-    
-    if not scenarios:
-        scenarios.append({
-            "scenario_name": "🔄 General Development",
-            "description": "Multi-purpose development opportunity",
-            "development_cost": price * 0.3,
-            "potential_value": price * 1.5,
-            "timeline_months": 24,
-            "roi_percent": 25.0,
-            "risk_level": "Medium"
-        })
-    
-    best_scenario = max(scenarios, key=lambda x: x["roi_percent"])
+    # Sort by ROI
+    analyzed_opportunities.sort(key=lambda x: float(x["💰 ANALYSIS"]["roi"].rstrip('%')), reverse=True)
     
     return {
-        "scenarios": scenarios,
-        "recommended_scenario": best_scenario,
-        "financial_summary": {
-            "current_property_value": f"${price:,.0f}",
-            "total_investment_required": f"${price + best_scenario['development_cost']:,.0f}",
-            "projected_developed_value": f"${best_scenario['potential_value']:,.0f}",
-            "estimated_net_profit": f"${best_scenario['potential_value'] - (price + best_scenario['development_cost']):,.0f}",
-            "roi_percentage": f"{best_scenario['roi_percent']:.1f}%",
-            "payback_period_months": best_scenario["timeline_months"],
-            "annual_roi": f"{(best_scenario['roi_percent'] / best_scenario['timeline_months']) * 12:.1f}%"
+        "🦅 SGIACH DEVELOPMENT ANALYSIS": {
+            "platform": "Your Winged View of Development",
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "data_source": "✅ Real Alberta Properties",
+            "analyzed": len(analyzed_opportunities)
+        },
+        "📊 MARKET": {
+            "total_properties": len(property_database),
+            "focus": "Edmonton Metropolitan Area"
+        },
+        "🏆 OPPORTUNITIES": analyzed_opportunities,
+        "🤝 CONTACT": {
+            "company": "SkyeBridge Consulting & Developments",
+            "email": "jeff@skyebridgedevelopments.ca",
+            "phone": "780.218.1178"
         }
+    }
+
+def analyze_property_simple(prop):
+    """Simple property analysis"""
+    price = prop["price"]
+    prop_type = prop["property_type"]
+    zoning = prop["zoning"]
+    
+    # Determine scenario based on type/zoning
+    if "Agricultural" in prop_type or "Agricultural" in zoning:
+        scenario = "🏘️ Residential Subdivision"
+        roi = 75.0
+        multiplier = 2.2
+        dev_cost_ratio = 0.4
+    elif "Commercial" in prop_type or "Commercial" in zoning:
+        scenario = "🏢 Commercial Development"
+        roi = 45.0
+        multiplier = 1.8
+        dev_cost_ratio = 0.6
+    elif "Industrial" in prop_type or "Industrial" in zoning:
+        scenario = "🏭 Industrial Complex"
+        roi = 60.0
+        multiplier = 2.0
+        dev_cost_ratio = 0.5
+    else:
+        scenario = "🔄 General Development"
+        roi = 25.0
+        multiplier = 1.5
+        dev_cost_ratio = 0.3
+    
+    # Calculate financials
+    dev_cost = price * dev_cost_ratio
+    total_investment = price + dev_cost
+    projected_value = price * multiplier
+    profit = projected_value - total_investment
+    
+    # Investment grade
+    if roi >= 50:
+        grade = "🌟 EXCELLENT (A+)"
+    elif roi >= 30:
+        grade = "⭐ VERY GOOD (A)"
+    elif roi >= 20:
+        grade = "✅ GOOD (B+)"
+    else:
+        grade = "🔶 FAIR (B)"
+    
+    return {
+        "scenario": scenario,
+        "roi": roi,
+        "investment": total_investment,
+        "profit": profit,
+        "grade": grade
     }
 
 @app.get("/properties")
 async def list_properties():
-    """List all uploaded properties"""
+    """List all properties"""
     return {
-        "📋 PROPERTY DATABASE": {
-            "total_properties": len(property_database),
-            "data_source": "Real Alberta Properties" if property_database else "No data loaded"
-        },
-        "🏠 SAMPLE PROPERTIES": property_database[:5] if property_database else []
+        "total_properties": len(property_database),
+        "properties": property_database[:10] if len(property_database) > 10 else property_database
     }
 
 if __name__ == "__main__":
