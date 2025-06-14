@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse
 import json
 from datetime import datetime
 import random
+import os
 
 app = FastAPI(title="Sgiach - Real Estate Development Analysis API", version="1.0.0")
 
