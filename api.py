@@ -52,32 +52,50 @@ async def upload_properties(file: UploadFile):
         csv_reader = csv.DictReader(StringIO(csv_string))
         new_properties = []
         
+        # Expected headers: MLS_Number,Address,City,Province,Price,Property_Type,Land_Size_SqFt,Zoning,Features,Time_on_Market,Listing_Agent,Brokerage
+        
         for row in csv_reader:
-            price_text = row.get('Price') or '0'
+            # Use EXACTLY the headers you specified
+            mls_number = row['MLS_Number'] if 'MLS_Number' in row else f"PROP_{len(new_properties)}"
+            address = row['Address'] if 'Address' in row else 'No Address'
+            city = row['City'] if 'City' in row else 'No City'
+            province = row['Province'] if 'Province' in row else 'AB'
+            
+            # Handle Price
+            price_text = row['Price'] if 'Price' in row else '0'
             try:
-                clean_price = str(price_text).replace('$', '').replace(',', '').strip()
-                price = float(clean_price) if clean_price else 0
+                price = float(str(price_text).replace(',', '').strip())
             except:
                 price = 0
             
-            time_text = row.get('Time_on_Market') or '0'
+            property_type = row['Property_Type'] if 'Property_Type' in row else 'Unknown Type'
+            land_size = row['Land_Size_SqFt'] if 'Land_Size_SqFt' in row else ''
+            zoning = row['Zoning'] if 'Zoning' in row else 'Unknown Zoning'
+            features = row['Features'] if 'Features' in row else ''
+            
+            # Handle Time_on_Market
+            time_text = row['Time_on_Market'] if 'Time_on_Market' in row else '0'
             try:
-                time_on_market = int(float(str(time_text).strip())) if time_text else 0
+                time_on_market = int(float(str(time_text).strip()))
             except:
                 time_on_market = 0
+            
+            listing_agent = row['Listing_Agent'] if 'Listing_Agent' in row else 'Unknown Agent'
+            brokerage = row['Brokerage'] if 'Brokerage' in row else 'Unknown Brokerage'
                 
             property_data = {
-                "id": row.get('MLS_Number') or f"PROP_{len(new_properties)}",
-                "address": row.get('Address') or 'Unknown Address',
-                "city": row.get('City') or 'Unknown City',
-                "province": row.get('Province') or 'AB',
+                "id": mls_number,
+                "address": address,
+                "city": city,
+                "province": province,
                 "price": price,
-                "property_type": row.get('Property_Type') or 'Unknown',
-                "zoning": row.get('Zoning') or 'Unknown',
-                "features": row.get('Features') or '',
+                "property_type": property_type,
+                "land_size_sqft": land_size,
+                "zoning": zoning,
+                "features": features,
                 "time_on_market": time_on_market,
-                "listing_agent": row.get('Listing_Agent') or 'Unknown',
-                "brokerage": row.get('Brokerage') or 'Unknown',
+                "listing_agent": listing_agent,
+                "brokerage": brokerage,
                 "uploaded_at": datetime.now().isoformat()
             }
             new_properties.append(property_data)
@@ -87,15 +105,31 @@ async def upload_properties(file: UploadFile):
         return {
             "SUCCESS": f"Uploaded {len(new_properties)} properties",
             "total_properties": len(property_database),
-            "first_property": {
+            "headers_found": list(csv_reader.fieldnames) if csv_reader.fieldnames else [],
+            "first_property_check": {
                 "id": new_properties[0]["id"] if new_properties else "None",
                 "address": new_properties[0]["address"] if new_properties else "None",
+                "city": new_properties[0]["city"] if new_properties else "None",
                 "price": new_properties[0]["price"] if new_properties else 0
             }
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/debug-csv")
+async def debug_csv():
+    """Debug endpoint to see what's actually in the database"""
+    if not property_database:
+        return {"message": "No properties in database"}
+    
+    return {
+        "total_properties": len(property_database),
+        "first_3_properties": property_database[:3],
+        "all_addresses": [prop["address"] for prop in property_database[:10]],
+        "all_cities": [prop["city"] for prop in property_database[:10]],
+        "all_prices": [prop["price"] for prop in property_database[:10]]
+    }
 
 @app.get("/quick-analysis")
 async def quick_analysis():
