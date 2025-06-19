@@ -1,0 +1,259 @@
+/* Sgiach Professional Platform Styles */
+
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #9b59b6;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--primary-color);
+    margin: 0;
+    padding: 0;
+}
+
+.sgiach-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.sgiach-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.sgiach-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.sgiach-header .subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+#map {
+    height: 600px;
+    border-radius: 15px;
+    border: 3px solid var(--primary-color);
+}
+
+.analysis-panel {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border: 2px solid #ecf0f1;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.summary-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.summary-item h4 {
+    margin: 0 0 8px 0;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.summary-item p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.validation-section {
+    background: #fff3e0;
+    border: 2px solid var(--warning-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.validation-btn {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.validation-btn:hover {
+    background: #e67e22;
+}
+
+.municipal-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.status-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.status-validated {
+    border: 3px solid var(--success-color);
+}
+
+.status-partial {
+    border: 3px solid var(--warning-color);
+}
+
+.status-pending {
+    border: 3px solid var(--danger-color);
+}
+
+.infrastructure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.infrastructure-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    border-left: 5px solid var(--secondary-color);
+}
+
+.infrastructure-card h4 {
+    margin: 0 0 15px 0;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cost-range {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--success-color);
+    margin: 10px 0;
+}
+
+.professional-footer {
+    background: #f8f9fa;
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 40px;
+    text-align: center;
+}
+
+.professional-footer h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.export-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 10px;
+    transition: background 0.3s ease;
+}
+
+.export-button:hover {
+    background: #1a252f;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sgiach-header h1 {
+        font-size: 2rem;
+    }
+    
+    #map {
+        height: 400px;
+    }
+}
+
+/* Leaflet Popup Customization */
+.leaflet-popup-content h4 {
+    margin: 0 0 10px 0;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 5px;
+}
+
+.leaflet-popup-content p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.leaflet-popup-content strong {
+    color: var(--primary-color);
+}
+
+/* Custom Marker Styles */
+.property-marker {
+    border: none !important;
+    background: transparent !important;
+}
+
+.utility-marker {
+    border: none !important;
+    background: transparent !important;
+}
+
+.amenity-marker {
+    border: none !important;
+    background: transparent !important;
+}
