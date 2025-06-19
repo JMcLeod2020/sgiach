@@ -4,6 +4,11 @@
 # Professional Engineering Platform Enhancement
 # Jeff McLeod, P.Eng - Technical Lead
 # ==============================================================================
+# Add these NEW imports to your existing imports
+from bs4 import BeautifulSoup
+import statistics
+from dataclasses import dataclass
+import asyncio
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -132,6 +137,75 @@ class PropertyMappingResponse(BaseModel):
     professional_summary: Dict[str, Any]
 
 # ==============================================================================
+# NEW MULTI-SOURCE DATA MODELS (ADD TO EXISTING api.py)
+# ==============================================================================
+
+class DataSource(str, Enum):
+    MANUAL_INPUT = "manual_input"           
+    LOCAL_REALTY_PARTNER = "local_realty"   
+    MLS_FEED = "mls_feed"                   
+    REALTOR_CA_SCRAPE = "realtor_scrape"    
+    COMPARABLE_ANALYSIS = "comparable"      
+    MARKET_ESTIMATE = "market_estimate"     
+    EXTERNAL_API = "external_api"           
+
+class DataCredibility(str, Enum):
+    VERIFIED = "verified"       # 100% weight
+    HIGH = "high"              # 85% weight
+    MEDIUM = "medium"          # 65% weight
+    LOW = "low"               # 40% weight
+    PRELIMINARY = "preliminary" # 25% weight
+
+@dataclass
+class DataSourceConfig:
+    source: DataSource
+    credibility: DataCredibility
+    weight: float
+    description: str
+    validation_required: bool
+
+class PropertyValueDataPoint(BaseModel):
+    value: float
+    source: DataSource
+    credibility: DataCredibility
+    weight: float
+    date_collected: datetime
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    details: Dict[str, Any] = {}
+
+class MarketDataRange(BaseModel):
+    min_value: float
+    max_value: float
+    weighted_average: float
+    median_value: float
+    confidence_interval: tuple[float, float]
+    sample_size: int
+    data_points: List[PropertyValueDataPoint]
+    market_conditions: str
+
+class PropertyMarketAnalysis(BaseModel):
+    address: str
+    coordinates: Dict[str, float]
+    municipality: str
+    current_market_value: MarketDataRange
+    comparable_sales: MarketDataRange
+    development_potential_value: MarketDataRange
+    data_sources_used: List[DataSource]
+    total_data_points: int
+    credibility_score: float
+    last_updated: datetime
+    market_trend: str
+    days_on_market_avg: Optional[int] = None
+    price_per_sqft_range: Optional[Dict[str, float]] = None
+
+class ScrapingResult(BaseModel):
+    source_url: str
+    property_data: Dict[str, Any]
+    scraped_at: datetime
+    success: bool
+    error_message: Optional[str] = None
+
+# ==============================================================================
 # ENHANCED SGIACH API APPLICATION
 # ==============================================================================
 
@@ -153,6 +227,48 @@ app.add_middleware(
 
 # Mount static files for mapping components
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ==============================================================================
+# NEW DATA SOURCE CONFIGURATIONS (ADD TO EXISTING api.py)
+# ==============================================================================
+
+DATA_SOURCE_CONFIGS = {
+    DataSource.MANUAL_INPUT: DataSourceConfig(
+        source=DataSource.MANUAL_INPUT,
+        credibility=DataCredibility.VERIFIED,
+        weight=1.0,
+        description="Manually verified property data with P.Eng oversight",
+        validation_required=False
+    ),
+    DataSource.LOCAL_REALTY_PARTNER: DataSourceConfig(
+        source=DataSource.LOCAL_REALTY_PARTNER,
+        credibility=DataCredibility.HIGH,
+        weight=0.85,
+        description="Local realty partner with actual sales data",
+        validation_required=False
+    ),
+    DataSource.REALTOR_CA_SCRAPE: DataSourceConfig(
+        source=DataSource.REALTOR_CA_SCRAPE,
+        credibility=DataCredibility.MEDIUM,
+        weight=0.65,
+        description="Realtor.ca public listing data",
+        validation_required=True
+    ),
+    DataSource.COMPARABLE_ANALYSIS: DataSourceConfig(
+        source=DataSource.COMPARABLE_ANALYSIS,
+        credibility=DataCredibility.MEDIUM,
+        weight=0.65,
+        description="Algorithmic comparable sales analysis",
+        validation_required=True
+    ),
+    DataSource.MARKET_ESTIMATE: DataSourceConfig(
+        source=DataSource.MARKET_ESTIMATE,
+        credibility=DataCredibility.LOW,
+        weight=0.40,
+        description="Automated market value estimate",
+        validation_required=True
+    )
+}
 
 # ==============================================================================
 # MUNICIPAL VALIDATION DATABASE
@@ -345,6 +461,264 @@ def assess_infrastructure_costs(property_classification: str) -> InfrastructureA
     )
 
 # ==============================================================================
+# NEW MULTI-SOURCE INTEGRATION CLASSES (ADD TO EXISTING api.py)
+# ==============================================================================
+
+class PropertyDataIntegrator:
+    def __init__(self):
+        self.realty_partners = {}
+        self.data_cache = {}
+        self.scraping_configs = {
+            "realtor_ca": {
+                "base_url": "https://www.realtor.ca",
+                "headers": {"User-Agent": "Mozilla/5.0 Professional Property Analysis Tool"},
+                "rate_limit": 2
+            }
+        }
+    
+    async def collect_comprehensive_market_data(
+        self, 
+        address: str, 
+        coordinates: Dict[str, float],
+        municipality: str,
+        property_type: str = "residential"
+    ) -> PropertyMarketAnalysis:
+        """Collect and integrate property data from multiple sources"""
+        all_data_points = []
+        
+        # 1. Check for manual input data (highest priority)
+        manual_data = await self.get_manual_input_data(address)
+        if manual_data:
+            all_data_points.extend(manual_data)
+        
+        # 2. Get local realty partner data
+        partner_data = await self.get_realty_partner_data(address, coordinates, municipality)
+        all_data_points.extend(partner_data)
+        
+        # 3. Scrape Realtor.ca for current listings
+        realtor_data = await self.scrape_realtor_ca(address, coordinates)
+        all_data_points.extend(realtor_data)
+        
+        # 4. Get comparable sales analysis
+        comparable_data = await self.get_comparable_sales(coordinates, municipality, property_type)
+        all_data_points.extend(comparable_data)
+        
+        # 5. Generate market estimates
+        market_estimates = await self.generate_market_estimates(coordinates, municipality, all_data_points)
+        all_data_points.extend(market_estimates)
+        
+        # 6. Analyze and weight all data points
+        market_analysis = self.analyze_weighted_market_data(
+            address, coordinates, municipality, all_data_points
+        )
+        
+        return market_analysis
+    
+    async def get_manual_input_data(self, address: str) -> List[PropertyValueDataPoint]:
+        """Get manually input and verified property data"""
+        # Placeholder - integrate with your existing manual input system
+        return []
+    
+    async def get_realty_partner_data(
+        self, 
+        address: str, 
+        coordinates: Dict[str, float], 
+        municipality: str
+    ) -> List[PropertyValueDataPoint]:
+        """Get data from local realty partner with actual sales data"""
+        partner_data_points = []
+        
+        # Placeholder for partner integration
+        # When you have realty partners, their API calls go here
+        
+        return partner_data_points
+    
+    async def scrape_realtor_ca(
+        self, 
+        address: str, 
+        coordinates: Dict[str, float]
+    ) -> List[PropertyValueDataPoint]:
+        """Enhanced Realtor.ca scraping"""
+        scraping_results = []
+        
+        try:
+            # Simple implementation - you can enhance this
+            search_url = f"https://www.realtor.ca/map#ZoomLevel=13&Center={coordinates['lat']}%2C{coordinates['lng']}"
+            
+            # Simulated scraping result for now
+            # You'll implement actual scraping based on Realtor.ca structure
+            sample_data_point = PropertyValueDataPoint(
+                value=450000,  # Placeholder value
+                source=DataSource.REALTOR_CA_SCRAPE,
+                credibility=DataCredibility.MEDIUM,
+                weight=0.65,
+                date_collected=datetime.now(),
+                confidence_score=0.70,
+                details={
+                    "search_url": search_url,
+                    "listing_type": "sample_data",
+                    "note": "Implement actual scraping logic here"
+                }
+            )
+            scraping_results.append(sample_data_point)
+                    
+        except Exception as e:
+            print(f"Error scraping Realtor.ca: {e}")
+        
+        return scraping_results
+    
+    async def get_comparable_sales(
+        self, 
+        coordinates: Dict[str, float], 
+        municipality: str,
+        property_type: str
+    ) -> List[PropertyValueDataPoint]:
+        """Generate comparable sales analysis"""
+        # Placeholder - implement with municipal records, MLS data
+        return []
+    
+    async def generate_market_estimates(
+        self, 
+        coordinates: Dict[str, float], 
+        municipality: str,
+        existing_data: List[PropertyValueDataPoint]
+    ) -> List[PropertyValueDataPoint]:
+        """Generate automated market value estimates"""
+        estimates = []
+        
+        if existing_data:
+            weighted_values = [dp.value * dp.weight for dp in existing_data]
+            total_weight = sum(dp.weight for dp in existing_data)
+            
+            if total_weight > 0:
+                estimated_value = sum(weighted_values) / total_weight
+                
+                estimate_data_point = PropertyValueDataPoint(
+                    value=estimated_value,
+                    source=DataSource.MARKET_ESTIMATE,
+                    credibility=DataCredibility.LOW,
+                    weight=0.40,
+                    date_collected=datetime.now(),
+                    confidence_score=0.60,
+                    details={
+                        "calculation_method": "weighted_average",
+                        "data_points_used": len(existing_data)
+                    }
+                )
+                estimates.append(estimate_data_point)
+        
+        return estimates
+    
+    def analyze_weighted_market_data(
+        self, 
+        address: str, 
+        coordinates: Dict[str, float], 
+        municipality: str,
+        data_points: List[PropertyValueDataPoint]
+    ) -> PropertyMarketAnalysis:
+        """Analyze all collected data points"""
+        if not data_points:
+            # Return default analysis if no data
+            default_value = 400000  # Placeholder
+            return PropertyMarketAnalysis(
+                address=address,
+                coordinates=coordinates,
+                municipality=municipality,
+                current_market_value=MarketDataRange(
+                    min_value=default_value * 0.9,
+                    max_value=default_value * 1.1,
+                    weighted_average=default_value,
+                    median_value=default_value,
+                    confidence_interval=(default_value * 0.95, default_value * 1.05),
+                    sample_size=0,
+                    data_points=[],
+                    market_conditions="insufficient_data"
+                ),
+                comparable_sales=MarketDataRange(
+                    min_value=default_value * 0.9,
+                    max_value=default_value * 1.1,
+                    weighted_average=default_value,
+                    median_value=default_value,
+                    confidence_interval=(default_value * 0.95, default_value * 1.05),
+                    sample_size=0,
+                    data_points=[],
+                    market_conditions="insufficient_data"
+                ),
+                development_potential_value=MarketDataRange(
+                    min_value=default_value * 0.9,
+                    max_value=default_value * 1.1,
+                    weighted_average=default_value,
+                    median_value=default_value,
+                    confidence_interval=(default_value * 0.95, default_value * 1.05),
+                    sample_size=0,
+                    data_points=[],
+                    market_conditions="insufficient_data"
+                ),
+                data_sources_used=[],
+                total_data_points=0,
+                credibility_score=0.0,
+                last_updated=datetime.now(),
+                market_trend="unknown"
+            )
+        
+        # Calculate weighted statistics
+        values = [dp.value for dp in data_points]
+        weights = [dp.weight * dp.confidence_score for dp in data_points]
+        
+        weighted_avg = sum(v * w for v, w in zip(values, weights)) / sum(weights) if weights else 0
+        min_val = min(values)
+        max_val = max(values)
+        median_val = statistics.median(values)
+        
+        std_dev = statistics.stdev(values) if len(values) > 1 else 0
+        confidence_interval = (weighted_avg - std_dev, weighted_avg + std_dev)
+        
+        credibility_score = sum(dp.weight * dp.confidence_score for dp in data_points) / len(data_points)
+        
+        current_market_value = MarketDataRange(
+            min_value=min_val,
+            max_value=max_val,
+            weighted_average=weighted_avg,
+            median_value=median_val,
+            confidence_interval=confidence_interval,
+            sample_size=len(data_points),
+            data_points=data_points,
+            market_conditions="stable"
+        )
+        
+        return PropertyMarketAnalysis(
+            address=address,
+            coordinates=coordinates,
+            municipality=municipality,
+            current_market_value=current_market_value,
+            comparable_sales=current_market_value,
+            development_potential_value=current_market_value,
+            data_sources_used=[dp.source for dp in data_points],
+            total_data_points=len(data_points),
+            credibility_score=credibility_score,
+            last_updated=datetime.now(),
+            market_trend="stable"
+        )
+
+class RealtyPartnerManager:
+    def __init__(self):
+        self.partners = {}
+    
+    def add_partner(
+        self, 
+        partner_name: str, 
+        api_config: Dict[str, Any],
+        data_credibility: DataCredibility = DataCredibility.HIGH
+    ):
+        """Add a new realty partner"""
+        self.partners[partner_name] = {
+            "config": api_config,
+            "credibility": data_credibility,
+            "last_sync": None,
+            "active": True
+        }
+
+# ==============================================================================
 # API ENDPOINTS
 # ==============================================================================
 
@@ -357,6 +731,164 @@ async def health_check():
         "version": "2.0.0",
         "features": ["mapping", "municipal-validation", "infrastructure-assessment"]
     }
+
+# ==============================================================================
+# NEW MULTI-SOURCE API ENDPOINTS (ADD TO EXISTING api.py)
+# ==============================================================================
+
+@app.post("/property/multi-source-analysis", response_model=PropertyMarketAnalysis)
+async def multi_source_property_analysis(
+    address: str,
+    coordinates: Dict[str, float],
+    municipality: str,
+    property_type: str = "residential",
+    include_scraping: bool = True,
+    include_partners: bool = True
+):
+    """Comprehensive property analysis using multiple data sources"""
+    integrator = PropertyDataIntegrator()
+    
+    try:
+        market_analysis = await integrator.collect_comprehensive_market_data(
+            address=address,
+            coordinates=coordinates,
+            municipality=municipality,
+            property_type=property_type
+        )
+        
+        return market_analysis
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Multi-source analysis failed: {str(e)}")
+
+@app.post("/property/scrape-realtor")
+async def scrape_realtor_property(realtor_url: str):
+    """Scrape property data from Realtor.ca URL"""
+    try:
+        integrator = PropertyDataIntegrator()
+        
+        scraping_result = ScrapingResult(
+            source_url=realtor_url,
+            property_data={"note": "Implement actual scraping logic"},
+            scraped_at=datetime.now(),
+            success=True
+        )
+        
+        return scraping_result
+        
+    except Exception as e:
+        return ScrapingResult(
+            source_url=realtor_url,
+            property_data={},
+            scraped_at=datetime.now(),
+            success=False,
+            error_message=str(e)
+        )
+
+@app.post("/partners/add-realty-partner")
+async def add_realty_partner(
+    partner_name: str,
+    api_endpoint: str,
+    api_key: str,
+    data_types: List[str],
+    credibility_level: DataCredibility
+):
+    """Add a new local realty partner for data integration"""
+    partner_manager = RealtyPartnerManager()
+    
+    api_config = {
+        "endpoint": api_endpoint,
+        "api_key": api_key,
+        "data_types": data_types
+    }
+    
+    partner_manager.add_partner(partner_name, api_config, credibility_level)
+    
+    return {
+        "message": f"Realty partner {partner_name} added successfully",
+        "partner_config": {
+            "name": partner_name,
+            "credibility": credibility_level,
+            "data_types": data_types
+        }
+    }
+
+@app.get("/property/data-sources-summary")
+async def get_data_sources_summary():
+    """Get summary of all available data sources and their credibility ratings"""
+    sources_summary = []
+    
+    for source, config in DATA_SOURCE_CONFIGS.items():
+        sources_summary.append({
+            "source": source,
+            "credibility": config.credibility,
+            "weight": config.weight,
+            "description": config.description,
+            "validation_required": config.validation_required
+        })
+    
+    return {
+        "available_sources": sources_summary,
+        "total_sources": len(sources_summary),
+        "integration_approach": "weighted_analysis_with_credibility_scoring"
+    }
+
+@app.post("/property/comprehensive-market-range")
+async def comprehensive_market_range_analysis(
+    address: str,
+    coordinates: Dict[str, float],
+    municipality: str,
+    analysis_depth: str = "standard"
+):
+    """Generate market price ranges supported by multiple data sources"""
+    integrator = PropertyDataIntegrator()
+    
+    try:
+        market_analysis = await integrator.collect_comprehensive_market_data(
+            address, coordinates, municipality
+        )
+        
+        market_ranges = {
+            "optimistic_market": {
+                "value": market_analysis.current_market_value.max_value * 1.05,
+                "confidence": 0.75,
+                "basis": "Strong market conditions, highest comparables",
+                "supporting_data_points": len([dp for dp in market_analysis.current_market_value.data_points if dp.confidence_score > 0.8])
+            },
+            "realistic_market": {
+                "value": market_analysis.current_market_value.weighted_average,
+                "confidence": 0.90,
+                "basis": "Weighted average of all credible sources",
+                "supporting_data_points": market_analysis.total_data_points
+            },
+            "conservative_market": {
+                "value": market_analysis.current_market_value.min_value * 0.95,
+                "confidence": 0.85,
+                "basis": "Conservative estimate, market challenges",
+                "supporting_data_points": len([dp for dp in market_analysis.current_market_value.data_points if dp.credibility == DataCredibility.HIGH])
+            }
+        }
+        
+        data_quality = {
+            "total_sources": len(market_analysis.data_sources_used),
+            "credibility_score": market_analysis.credibility_score,
+            "recent_data_points": len([dp for dp in market_analysis.current_market_value.data_points if (datetime.now() - dp.date_collected).days <= 30])
+        }
+        
+        return {
+            "market_analysis": market_analysis,
+            "market_ranges": market_ranges,
+            "data_quality": data_quality,
+            "professional_recommendation": {
+                "validation_required": "true" if data_quality["credibility_score"] < 0.80 else "false",
+                "confidence_level": "high" if data_quality["credibility_score"] > 0.80 else "medium",
+                "next_steps": "Professional P.Eng review recommended for investment decisions"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Market range analysis failed: {str(e)}")
+
 
 @app.post("/property/comprehensive-analysis", response_model=PropertyMappingResponse)
 async def comprehensive_property_analysis(request: PropertyAnalysisRequest):
