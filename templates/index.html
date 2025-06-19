@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sgiach Professional Development Analysis Platform</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <!-- Sgiach Styles -->
+    <link rel="stylesheet" href="/static/css/sgiach-styles.css">
+</head>
+<body>
+    <div class="sgiach-container">
+        <!-- Header -->
+        <div class="sgiach-header">
+            <h1>Sgiach Professional Platform</h1>
+            <div class="subtitle">
+                Municipal Development Analysis with Professional Engineering Oversight
+            </div>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                SkyeBridge Consulting & Developments Inc. | Jeff McLeod, P.Eng
+            </div>
+        </div>
+
+        <!-- Municipal Status Dashboard -->
+        <div class="municipal-status">
+            <div class="status-card status-validated">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success-color); margin-bottom: 10px;"></i>
+                <h3>Edmonton LRT</h3>
+                <p>Municipal Validated</p>
+                <small>+1.5% property impact confirmed</small>
+            </div>
+            <div class="status-card status-partial">
+                <i class="fas fa-clock" style="font-size: 2rem; color: var(--warning-color); margin-bottom: 10px;"></i>
+                <h3>Parks & Schools</h3>
+                <p>Validation Pending</p>
+                <small>Q3-Q4 2025 studies planned</small>
+            </div>
+            <div class="status-card status-pending">
+                <i class="fas fa-research" style="font-size: 2rem; color: var(--danger-color); margin-bottom: 10px;"></i>
+                <h3>Employment Centers</h3>
+                <p>Research Required</p>
+                <small>2026 comprehensive analysis</small>
+            </div>
+        </div>
+
+        <!-- Main Analysis Interface -->
+        <div class="analysis-grid">
+            <div>
+                <div id="map"></div>
+            </div>
+            <div id="analysis-panel">
+                <div class="analysis-panel">
+                    <h3>Property Analysis</h3>
+                    <p>Select a property location on the map to begin comprehensive analysis.</p>
+                    
+                    <div style="margin: 20px 0;">
+                        <label for="municipality-select">Municipality:</label>
+                        <select id="municipality-select" style="width: 100%; padding: 8px; margin-top: 5px;">
+                            <option value="edmonton">City of Edmonton</option>
+                            <option value="leduc">City of Leduc</option>
+                            <option value="st_albert">City of St. Albert</option>
+                            <option value="strathcona">Strathcona County</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="analyzeCurrentLocation()" class="export-button">
+                        Analyze Property
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Infrastructure Assessment Grid -->
+        <div class="infrastructure-grid">
+            <div class="infrastructure-card">
+                <h4><i class="fas fa-tint"></i> Water & Sewer</h4>
+                <div class="cost-range">$15,000 - $200,000</div>
+                <p>Municipal connection availability varies by location. Rural properties require private systems.</p>
+            </div>
+            <div class="infrastructure-card">
+                <h4><i class="fas fa-bolt"></i> Electrical Service</h4>
+                <div class="cost-range">$2,500 - $125,000</div>
+                <p>Extension costs depend on distance to existing infrastructure and capacity requirements.</p>
+            </div>
+            <div class="infrastructure-card">
+                <h4><i class="fas fa-fire"></i> Natural Gas</h4>
+                <div class="cost-range">$1,800 - $45,000</div>
+                <p>ATCO Gas distribution network coverage. Rural areas may require propane systems.</p>
+            </div>
+        </div>
+
+        <!-- Professional Footer -->
+        <div class="professional-footer">
+            <h3><i class="fas fa-tools"></i> Professional Engineering Validation</h3>
+            <p>Complex infrastructure requirements and development projects require professional P.Eng oversight to ensure compliance with Alberta standards and municipal requirements.</p>
+            <button onclick="window.sgiachMap?.exportAnalysisReport()" class="export-button">
+                <i class="fas fa-download"></i> Export Analysis Report
+            </button>
+            <button onclick="requestProfessionalValidation()" class="export-button">
+                <i class="fas fa-user-tie"></i> Request P.Eng Review
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="/static/js/sgiach-mapping.js"></script>
+    
+    <script>
+        // Initialize the application
+        function analyzeCurrentLocation() {
+            const municipality = document.getElementById('municipality-select').value;
+            const coordinates = getDefaultCoordinates(municipality);
+            
+            window.sgiachMap.initializeMap(coordinates, municipality);
+        }
+        
+        function getDefaultCoordinates(municipality) {
+            const coords = {
+                'edmonton': { lat: 53.5444, lng: -113.4909 },
+                'leduc': { lat: 53.2734, lng: -113.5517 },
+                'st_albert': { lat: 53.6328, lng: -113.6273 },
+                'strathcona': { lat: 53.5225, lng: -113.3048 }
+            };
+            return coords[municipality] || coords['edmonton'];
+        }
+        
+        // Auto-initialize with Edmonton
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => analyzeCurrentLocation(), 1000);
+        });
+    </script>
+</body>
+</html>
