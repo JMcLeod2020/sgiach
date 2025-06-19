@@ -2172,6 +2172,300 @@ async def simplified_property_analysis(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Property analysis failed: {str(e)}")
 
+# JSON-based endpoints for Swagger UI testing
+class PropertyAnalysisJSON(BaseModel):
+    address: str
+    municipality: Municipality
+    property_type: PropertyType
+    include_market_analysis: bool = True
+    include_amenity_analysis: bool = True
+    include_infrastructure_analysis: bool = True
+    include_partner_data: bool = True
+    analysis_radius_km: float = 2.0
+
+class UtilityAnalysisJSON(BaseModel):
+    address: str
+    municipality: Municipality
+    property_type: PropertyType
+    development_type: str
+    target_density: str = "medium"
+
+class AmenityAnalysisJSON(BaseModel):
+    address: str
+    municipality: Municipality
+    property_type: PropertyType
+    lot_size_sqft: Optional[float] = None
+    include_utilities: bool = True
+    include_amenities: bool = True
+    include_infrastructure: bool = True
+    professional_analysis: bool = True
+
+class PartnerRegistrationJSON(BaseModel):
+    partner_id: str
+    company_name: str
+    contact_person: str
+    email: str
+    license_number: str
+    service_areas: List[str]
+
+class PartnerSalesDataJSON(BaseModel):
+    address: str
+    sale_price: float
+    sale_date: str
+    property_type: str
+    mls_number: str
+    municipality: str
+    api_key: str
+
+@app.post("/property/analysis-json")
+async def property_analysis_json(request: PropertyAnalysisJSON):
+    """Simplified property analysis endpoint - JSON version for Swagger UI"""
+    
+    try:
+        analysis_results = {
+            "address": request.address,
+            "municipality": request.municipality.value,
+            "property_type": request.property_type.value,
+            "analysis_date": datetime.now().isoformat(),
+            "analysis_radius_km": request.analysis_radius_km
+        }
+        
+        # Market Analysis
+        if request.include_market_analysis:
+            base_value = 450000
+            market_multiplier = 1.05 if request.municipality.value in ["edmonton", "st_albert"] else 0.95
+            
+            analysis_results["market_analysis"] = {
+                "estimated_value": int(base_value * market_multiplier),
+                "market_conditions": "stable",
+                "comparable_sales": 12,
+                "data_confidence": "medium"
+            }
+        
+        # Infrastructure Analysis
+        if request.include_infrastructure_analysis:
+            utility_analyzer = UtilityAnalysisEngine()
+            utility_ratings = utility_analyzer.analyze_utility_connections(
+                address=request.address,
+                municipality=request.municipality.value,
+                property_type=request.property_type.value
+            )
+            
+            analysis_results["infrastructure_analysis"] = {
+                "overall_utility_score": utility_ratings.overall_score,
+                "development_readiness": utility_ratings.development_readiness_score,
+                "total_infrastructure_cost": f"${utility_ratings.total_infrastructure_cost_low:,.0f} - ${utility_ratings.total_infrastructure_cost_high:,.0f}",
+                "engineering_assessment": utility_ratings.engineering_risk_assessment
+            }
+        
+        # Amenity Analysis
+        if request.include_amenity_analysis:
+            amenity_analyzer = AmenityProximityAnalyzer()
+            property_coords = (53.5461, -113.4909)
+            
+            amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
+                address=request.address,
+                municipality=request.municipality.value,
+                property_coordinates=property_coords
+            )
+            
+            analysis_results["amenity_analysis"] = {
+                "overall_amenity_score": amenity_analysis.overall_amenity_score,
+                "value_impact_percentage": amenity_analysis.value_impact_percentage,
+                "key_amenities": [
+                    {"name": amenity.name, "distance": f"{amenity.distance_meters:.0f}m", "impact": amenity.impact_score}
+                    for amenity in amenity_analysis.nearest_amenities[:5]
+                ]
+            }
+        
+        # Professional Recommendations
+        analysis_results["professional_recommendations"] = {
+            "development_feasibility": "medium",
+            "investment_recommendation": "requires_detailed_analysis",
+            "next_steps": [
+                "Verify utility connection costs with municipal authorities",
+                "Confirm zoning and development permissions",
+                "Consider professional engineering consultation for complex projects"
+            ],
+            "professional_notes": "Analysis completed by SkyeBridge Consulting & Developments Inc. P.Eng oversight available."
+        }
+        
+        return analysis_results
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Property analysis failed: {str(e)}")
+
+@app.post("/property/utility-analysis-json")
+async def utility_analysis_json(request: UtilityAnalysisJSON):
+    """Complete utility connection analysis - JSON version for Swagger UI"""
+    
+    analyzer = UtilityAnalysisEngine()
+    
+    try:
+        utility_ratings = analyzer.analyze_utility_connections(
+            address=request.address,
+            municipality=request.municipality.value,
+            property_type=request.property_type.value
+        )
+        
+        return {
+            "address": request.address,
+            "municipality": request.municipality.value,
+            "analysis_date": datetime.now().isoformat(),
+            "utility_ratings": asdict(utility_ratings),
+            "professional_notes": "Analysis completed by SkyeBridge Consulting & Developments Inc. P.Eng oversight provided."
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Utility analysis failed: {str(e)}")
+
+@app.post("/property/amenity-analysis-json")
+async def amenity_analysis_json(request: AmenityAnalysisJSON):
+    """Complete amenity proximity analysis - JSON version for Swagger UI"""
+    
+    analyzer = AmenityProximityAnalyzer()
+    property_coords = (53.5461, -113.4909)
+    
+    try:
+        amenity_analysis = analyzer.analyze_amenity_proximity(
+            address=request.address,
+            municipality=request.municipality.value,
+            property_coordinates=property_coords
+        )
+        
+        return {
+            "address": request.address,
+            "municipality": request.municipality.value,
+            "analysis_date": datetime.now().isoformat(),
+            "amenity_analysis": asdict(amenity_analysis),
+            "professional_notes": "Amenity analysis completed using Alberta municipal databases."
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Amenity analysis failed: {str(e)}")
+
+@app.post("/property/comprehensive-mapping-analysis-json", response_class=HTMLResponse)
+async def comprehensive_mapping_analysis_json(request: AmenityAnalysisJSON):
+    """Complete property analysis with interactive mapping - JSON version for Swagger UI"""
+    
+    utility_analyzer = UtilityAnalysisEngine()
+    amenity_analyzer = AmenityProximityAnalyzer()
+    property_coords = (53.5461, -113.4909)
+    
+    try:
+        # Perform utility analysis
+        utility_ratings = utility_analyzer.analyze_utility_connections(
+            address=request.address,
+            municipality=request.municipality.value,
+            property_type=request.property_type.value
+        )
+        
+        # Perform amenity analysis  
+        amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
+            address=request.address,
+            municipality=request.municipality.value,
+            property_coordinates=property_coords
+        )
+        
+        # Generate interactive map
+        property_data = {
+            "address": request.address,
+            "municipality": request.municipality.value,
+            "property_type": request.property_type.value,
+            "coordinates": property_coords
+        }
+        
+        interactive_map = generate_interactive_property_map(
+            property_data=property_data,
+            utility_ratings=utility_ratings,
+            amenity_analysis=amenity_analysis
+        )
+        
+        return HTMLResponse(content=interactive_map)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
+
+@app.post("/partners/register-json")
+async def register_partner_firm_json(request: PartnerRegistrationJSON):
+    """Register new partner realty firm - JSON version for Swagger UI"""
+    
+    # Check if partner already exists
+    existing_partner = next((p for p in PARTNER_FIRMS if p["partner_id"] == request.partner_id), None)
+    if existing_partner:
+        raise HTTPException(status_code=400, detail="Partner firm already registered")
+    
+    # Generate API key
+    api_key = f"{request.partner_id.upper()}_2024_SECURE_KEY_{len(PARTNER_FIRMS)+1:03d}"
+    
+    new_partner = {
+        "partner_id": request.partner_id,
+        "company_name": request.company_name,
+        "contact_person": request.contact_person,
+        "email": request.email,
+        "license_number": request.license_number,
+        "service_areas": request.service_areas,
+        "api_key": api_key,
+        "data_submissions": 0,
+        "last_submission": None,
+        "credibility_rating": 0.85,
+        "active": True
+    }
+    
+    PARTNER_FIRMS.append(new_partner)
+    
+    return {
+        "status": "success",
+        "message": "Partner firm registered successfully",
+        "partner_id": request.partner_id,
+        "api_key": api_key,
+        "service_areas": request.service_areas
+    }
+
+@app.post("/partners/data/sales-json")
+async def submit_partner_sales_data_json(request: PartnerSalesDataJSON):
+    """Partner firms submit sales data - JSON version for Swagger UI"""
+    
+    # Validate API key
+    partner = next((p for p in PARTNER_FIRMS if p["api_key"] == request.api_key), None)
+    if not partner:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if not partner["active"]:
+        raise HTTPException(status_code=403, detail="Partner account not active")
+    
+    # Validate municipality access
+    if request.municipality not in partner["service_areas"]:
+        raise HTTPException(status_code=403, detail=f"Partner not authorized for {request.municipality}")
+    
+    # Create sales record
+    sales_data = {
+        "partner_id": partner["partner_id"],
+        "sale_type": "actual_sale",
+        "sale_price": request.sale_price,
+        "sale_date": request.sale_date,
+        "address": request.address,
+        "property_type": request.property_type,
+        "mls_number": request.mls_number,
+        "municipality": request.municipality,
+        "submission_date": datetime.now().isoformat(),
+        "credibility_weight": 0.85,
+        "confidence_level": "high"
+    }
+    
+    # Update partner statistics
+    partner["data_submissions"] += 1
+    partner["last_submission"] = datetime.now().isoformat()
+    
+    return {
+        "status": "success",
+        "message": "Sales data submitted successfully",
+        "partner_company": partner["company_name"],
+        "sale_price": request.sale_price,
+        "credibility_weight": 0.85,
+        "submission_count": partner["data_submissions"]
+    }
+
 # Legacy Endpoints for Backwards Compatibility
 @app.post("/property/comprehensive-analysis")
 async def comprehensive_property_analysis(
@@ -2366,7 +2660,26 @@ async def root():
         "municipalities_served": ["Edmonton", "Leduc", "St. Albert", "Strathcona County", "Parkland County"],
         "professional_services": "P.Eng oversight available for complex developments",
         "api_documentation": "/docs",
-        "health_check": "/health"
+        "health_check": "/health",
+        "testing_endpoints": {
+            "note": "JSON endpoints available for Swagger UI testing",
+            "json_endpoints": [
+                "/property/analysis-json",
+                "/property/utility-analysis-json", 
+                "/property/amenity-analysis-json",
+                "/property/comprehensive-mapping-analysis-json",
+                "/partners/register-json",
+                "/partners/data/sales-json"
+            ],
+            "form_endpoints": [
+                "/property/analysis",
+                "/property/utility-analysis",
+                "/property/amenity-analysis", 
+                "/property/comprehensive-mapping-analysis",
+                "/partners/register",
+                "/partners/data/sales"
+            ]
+        }
     }
 
 if __name__ == "__main__":
