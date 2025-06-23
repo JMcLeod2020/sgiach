@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sgiach Development Assessment & Building Placement</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .project-info {
+            text-align: right;
+            color: #7f8c8d;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            height: calc(100vh - 140px);
+        }
+
+        .interface-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+        }
+
+        .panel-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Assessment Interface */
+        .assessment-map {
+            flex: 1;
+            position: relative;
+            background: #f8f9fa;
+        }
+
+        .assessment-controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            background: #fff;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .toggle-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .toggle-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Building Placement Interface */
+        .building-grid {
+            flex: 1;
+            background: #e8f5e8;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .building-palette {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .building-category {
+            margin-bottom: 15px;
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .building-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .building-item {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .building-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .building-item:active {
+            cursor: grabbing;
+        }
+
+        .building-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .building-name {
+            font-size: 10px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .placed-building {
+            position: absolute;
+            background: rgba(102, 126, 234, 0.8);
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .placed-building:hover {
+            background: rgba(102, 126, 234, 0.9);
+            transform: scale(1.05);
+        }
+
+        .lot-boundary {
+            position: absolute;
+            border: 3px solid #dc3545;
+            border-radius: 8px;
+            background: rgba(220, 53, 69, 0.1);
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+        }
+
+        .assessment-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-width: 200px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .info-label {
+            color: #6c757d;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .buildable-area {
+            position: absolute;
+            border: 2px dashed #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            top: 80px;
+            left: 80px;
+            right: 80px;
+            bottom: 80px;
+        }
+
+        .utility-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .water { background: #0066cc; }
+        .sewer { background: #8b4513; }
+        .electrical { background: #ffd700; }
+        .gas { background: #ff6b35; }
+
+        .constraint-overlay {
+            position: absolute;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px dashed #ff0000;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .interface-panel {
+                height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-city"></i>
+                </div>
+                <div class="logo-text">Sgiach Development Suite</div>
+            </div>
+            <div class="project-info">
+                <div style="font-weight: 600; color: #2c3e50;">SkyeBridge Consulting & Developments Inc.</div>
+                <div>Professional Engineering Platform</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Development Assessment Interface -->
+        <div class="interface-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-map-marked-alt"></i> Development Assessment
+                </div>
+                <div class="panel-subtitle">Lot Analysis & Buildability Constraints</div>
+            </div>
+            <div class="panel-content">
+                <div class="assessment-map" id="assessmentMap">
+                    <div class="lot-boundary"></div>
+                    <div class="buildable-area"></div>
+                    
+                    <!-- Utility Markers -->
+                    <div class="utility-marker water" style="top: 30px; left: 100px;"></div>
+                    <div class="utility-marker sewer" style="top: 60px; left: 120px;"></div>
+                    <div class="utility-marker electrical" style="top: 40px; right: 80px;"></div>
+                    <div class="utility-marker gas" style="bottom: 50px; left: 90px;"></div>
+                    
+                    <!-- Constraint Overlays -->
+                    <div class="constraint-overlay" style="top: 50px; left: 50px; width: 150px; height: 30px;"></div>
+                    <div class="constraint-overlay" style="bottom: 50px; right: 50px; width: 120px; height: 40px;"></div>
+                    
+                    <div class="assessment-info">
+                        <div class="info-item">
+                            <span class="info-label">Lot Size:</span>
+                            <span class="info-value">6,800 sq ft</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Buildable Area:</span>
+                            <span class="info-value">4,200 sq ft</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Coverage Limit:</span>
+                            <span class="info-value">45% (3,060 sq ft)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Front Setback:</span>
+                            <span class="info-value">7.5m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Side Setbacks:</span>
+                            <span class="info-value">1.2m each</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Rear Setback:</span>
+                            <span class="info-value">7.5m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Height Limit:</span>
+                            <span class="info-value">11m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Water Connection:</span>
+                            <span class="info-value" style="color: #28a745;">45m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Electrical:</span>
+                            <span class="info-value" style="color: #28a745;">Available</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="assessment-controls">
+                    <div class="control-group">
+                        <label class="control-label">Display Layers</label>
+                        <div class="control-row">
+                            <button class="toggle-btn active" data-layer="boundaries">Lot Boundaries</button>
+                            <button class="toggle-btn active" data-layer="utilities">Utilities</button>
+                            <button class="toggle-btn active" data-layer="setbacks">Setbacks</button>
+                            <button class="toggle-btn" data-layer="constraints">Constraints</button>
+                            <button class="toggle-btn" data-layer="drainage">Drainage</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Analysis Tools</label>
+                        <div class="control-row">
+                            <button class="toggle-btn" data-tool="measure">Measure Tool</button>
+                            <button class="toggle-btn" data-tool="grade">Grade Analysis</button>
+                            <button class="toggle-btn" data-tool="shadow">Shadow Study</button>
+                        </div>
+                    </div>
+                    <button class="export-btn" onclick="exportAssessment()">
+                        <i class="fas fa-download"></i> Export Site Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Building Placement Interface -->
+        <div class="interface-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-building"></i> Development Builder
+                </div>
+                <div class="panel-subtitle">Drag & Drop Building Placement</div>
+            </div>
+            <div class="panel-content">
+                <div class="building-grid" id="buildingGrid">
+                    <div class="grid-overlay"></div>
+                    <div class="lot-boundary"></div>
+                    <div class="buildable-area"></div>
+                </div>
+                
+                <div class="building-palette">
+                    <div class="building-category">
+                        <div class="category-title">Residential</div>
+                        <div class="building-items">
+                            <div class="building-item" draggable="true" data-building="single-family" data-size="120x80">
+                                <i class="fas fa-home building-icon" style="color: #28a745;"></i>
+                                <div class="building-name">Single Family</div>
+                            </div>
+                            <div class="building-item" draggable="true" data-building="duplex" data-size="140x90">
+                                <i class="fas fa-building building-icon" style="color: #fd7e14;"></i>
+                                <div class="building-name">Duplex</div>
+                            </div>
+                            <div class="building-item" draggable="true" data-building="townhouse" data-size="180x70">
+                                <i class="fas fa-city building-icon" style="color: #6f42c1;"></i>
+                                <div class="building-name">Townhouse</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="building-category">
+                        <div class="category-title">Commercial</div>
+                        <div class="building-items">
+                            <div class="building-item" draggable="true" data-building="retail" data-size="200x100">
+                                <i class="fas fa-store building-icon" style="color: #dc3545;"></i>
+                                <div class="building-name">Retail</div>
+                            </div>
+                            <div class="building-item" draggable="true" data-building="office" data-size="150x150">
+                                <i class="fas fa-briefcase building-icon" style="color: #0dcaf0;"></i>
+                                <div class="building-name">Office</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="building-category">
+                        <div class="category-title">Infrastructure</div>
+                        <div class="building-items">
+                            <div class="building-item" draggable="true" data-building="parking" data-size="90x60">
+                                <i class="fas fa-parking building-icon" style="color: #6c757d;"></i>
+                                <div class="building-name">Parking</div>
+                            </div>
+                            <div class="building-item" draggable="true" data-building="garden" data-size="80x80">
+                                <i class="fas fa-seedling building-icon" style="color: #198754;"></i>
+                                <div class="building-name">Garden</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="export-btn" onclick="exportDevelopment()">
+                        <i class="fas fa-download"></i> Export Development Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Assessment Interface Control
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.dataset.layer) {
+                    this.classList.toggle('active');
+                    toggleLayer(this.dataset.layer, this.classList.contains('active'));
+                } else if (this.dataset.tool) {
+                    document.querySelectorAll(`[data-tool]`).forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activateTool(this.dataset.tool);
+                }
+            });
+        });
+
+        function toggleLayer(layer, active) {
+            const elements = document.querySelectorAll(`.${layer}`);
+            elements.forEach(el => {
+                el.style.display = active ? 'block' : 'none';
+            });
+            
+            console.log(`Layer ${layer}: ${active ? 'Enabled' : 'Disabled'}`);
+        }
+
+        function activateTool(tool) {
+            console.log(`Activated tool: ${tool}`);
+            // Tool activation logic would go here
+        }
+
+        // Building Placement Logic
+        let draggedElement = null;
+        let placedBuildings = [];
+        const gridSize = 30;
+
+        document.querySelectorAll('.building-item').forEach(item => {
+            item.addEventListener('dragstart', function(e) {
+                draggedElement = this;
+                e.dataTransfer.setData('text/plain', '');
+            });
+        });
+
+        const buildingGrid = document.getElementById('buildingGrid');
+
+        buildingGrid.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+
+        buildingGrid.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (!draggedElement) return;
+
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Snap to grid
+            const snappedX = Math.round(x / gridSize) * gridSize;
+            const snappedY = Math.round(y / gridSize) * gridSize;
+
+            const buildingType = draggedElement.dataset.building;
+            const buildingSize = draggedElement.dataset.size.split('x');
+            const width = parseInt(buildingSize[0]);
+            const height = parseInt(buildingSize[1]);
+
+            // Check if placement is within buildable area
+            const buildableArea = document.querySelector('.buildable-area');
+            const buildableRect = buildableArea.getBoundingClientRect();
+            const gridRect = this.getBoundingClientRect();
+            
+            const buildableX = buildableRect.left - gridRect.left;
+            const buildableY = buildableRect.top - gridRect.top;
+            const buildableWidth = buildableRect.width;
+            const buildableHeight = buildableRect.height;
+
+            if (snappedX >= buildableX && snappedY >= buildableY && 
+                snappedX + width <= buildableX + buildableWidth && 
+                snappedY + height <= buildableY + buildableHeight) {
+                
+                placeBuilding(snappedX, snappedY, width, height, buildingType);
+            } else {
+                showConstraintWarning();
+            }
+
+            draggedElement = null;
+        });
+
+        function placeBuilding(x, y, width, height, type) {
+            const building = document.createElement('div');
+            building.className = 'placed-building';
+            building.style.left = x + 'px';
+            building.style.top = y + 'px';
+            building.style.width = width + 'px';
+            building.style.height = height + 'px';
+            building.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+            building.dataset.type = type;
+
+            // Add remove functionality
+            building.addEventListener('dblclick', function() {
+                this.remove();
+                const index = placedBuildings.findIndex(b => b.element === this);
+                if (index > -1) placedBuildings.splice(index, 1);
+            });
+
+            buildingGrid.appendChild(building);
+            placedBuildings.push({
+                element: building,
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                type: type
+            });
+
+            console.log(`Placed ${type} at (${x}, ${y})`);
+        }
+
+        function showConstraintWarning() {
+            const warning = document.createElement('div');
+            warning.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #dc3545;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                z-index: 1000;
+                font-weight: 600;
+            `;
+            warning.textContent = 'Cannot place building outside buildable area!';
+            document.body.appendChild(warning);
+
+            setTimeout(() => {
+                warning.remove();
+            }, 2000);
+        }
+
+        function exportAssessment() {
+            const assessmentData = {
+                lotSize: '6,800 sq ft',
+                buildableArea: '4,200 sq ft',
+                constraints: ['Front setback: 7.5m', 'Side setbacks: 1.2m each', 'Rear setback: 7.5m'],
+                utilities: ['Water: 45m', 'Electrical: Available', 'Sewer: Extension required'],
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Exporting Assessment:', assessmentData);
+            
+            // In real implementation, this would generate a PDF or send to API
+            alert('Site Assessment exported successfully!\n\nThis would normally generate a comprehensive engineering report for municipal submission.');
+        }
+
+        function exportDevelopment() {
+            const developmentData = {
+                placedBuildings: placedBuildings.map(b => ({
+                    type: b.type,
+                    position: { x: b.x, y: b.y },
+                    dimensions: { width: b.width, height: b.height }
+                })),
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('Exporting Development Plan:', developmentData);
+            
+            // In real implementation, this would integrate with Sgiach API
+            alert(`Development Plan exported successfully!\n\nBuildings placed: ${placedBuildings.length}\n\nThis would normally send the plan to your Sgiach platform for cost analysis and feasibility assessment.`);
+        }
+
+        // Initialize interface
+        console.log('Sgiach Development Interfaces Initialized');
+        console.log('Assessment Interface: Ready for lot analysis');
+        console.log('Building Placement: Ready for development planning');
+    </script>
+</body>
+</html>
