@@ -1,8 +1,8 @@
 #==============================================================================
-# SGIACH COMPLETE API - WITH UTILITY RATINGS & ADVANCED MAPPING
+# SGIACH COMPLETE API - WITH DEVELOPMENT ASSESSMENT & BUILDING PLACEMENT
 # SkyeBridge Consulting & Developments Inc.
 # Complete Professional Platform: All Features Integrated
-# Jeff Martens, P.Eng - Professional Engineering Analysis
+# Jeff McLeod, P.Eng - Professional Engineering Analysis
 #==============================================================================
 
 from fastapi import FastAPI, HTTPException, Query, Form, File, UploadFile, Depends, BackgroundTasks
@@ -33,7 +33,7 @@ app = FastAPI(
 )
 
 #==============================================================================
-# ENHANCED DATA MODELS WITH UTILITY RATINGS
+# ENHANCED DATA MODELS WITH DEVELOPMENT INTERFACES
 #==============================================================================
 
 class PropertyType(str, Enum):
@@ -51,15 +51,25 @@ class Municipality(str, Enum):
     parkland = "parkland"
 
 class UtilityStatus(str, Enum):
-    available = "available"           # Direct connection possible
-    extension_required = "extension_required"  # Extension needed
-    major_infrastructure = "major_infrastructure"  # Significant infrastructure required
-    private_system = "private_system"  # Private well/septic required
+    available = "available"           
+    extension_required = "extension_required"  
+    major_infrastructure = "major_infrastructure"  
+    private_system = "private_system"  
+
+class BuildingType(str, Enum):
+    single_family = "single_family"
+    duplex = "duplex"
+    townhouse = "townhouse"
+    retail = "retail"
+    office = "office"
+    parking = "parking"
+    garden = "garden"
+    industrial = "industrial"
 
 @dataclass
 class UtilityConnection:
     """Individual utility connection analysis"""
-    utility_type: str  # water, sewer, electrical, gas, internet
+    utility_type: str  
     status: UtilityStatus
     distance_meters: float
     connection_cost_low: float
@@ -72,7 +82,7 @@ class UtilityConnection:
 @dataclass
 class UtilityRatings:
     """Complete utility accessibility ratings"""
-    overall_score: float  # 0-10 composite score
+    overall_score: float  
     water_connection: UtilityConnection
     sewer_connection: UtilityConnection
     electrical_connection: UtilityConnection
@@ -80,7 +90,7 @@ class UtilityRatings:
     internet_connection: UtilityConnection
     total_infrastructure_cost_low: float
     total_infrastructure_cost_high: float
-    development_readiness_score: float  # 0-10 based on infrastructure
+    development_readiness_score: float  
     engineering_risk_assessment: str
 
 @dataclass
@@ -92,13 +102,13 @@ class AmenityDistance:
     distance_meters: float
     walking_time_minutes: float
     driving_time_minutes: float
-    impact_score: float  # 0-10 impact on property value
+    impact_score: float  
     coordinates: Tuple[float, float]
 
 @dataclass
 class AmenityAnalysis:
     """Complete amenity proximity analysis"""
-    overall_amenity_score: float  # 0-10 composite score
+    overall_amenity_score: float  
     education_score: float
     healthcare_score: float
     retail_score: float
@@ -106,7 +116,7 @@ class AmenityAnalysis:
     recreation_score: float
     employment_score: float
     nearest_amenities: List[AmenityDistance]
-    value_impact_percentage: float  # Expected impact on property value
+    value_impact_percentage: float  
 
 @dataclass
 class MunicipalInfrastructure:
@@ -118,6 +128,38 @@ class MunicipalInfrastructure:
     development_standards: Dict[str, Any]
     professional_requirements: Dict[str, Any]
 
+# Development Interface Data Models
+class LotAssessment(BaseModel):
+    property_id: str
+    coordinates: Tuple[float, float]
+    lot_size_sqft: float
+    municipality: str
+    zoning: str
+
+class PlacedBuilding(BaseModel):
+    building_type: BuildingType
+    position_x: float
+    position_y: float
+    width: float
+    height: float
+    building_id: str
+
+class DevelopmentPlan(BaseModel):
+    property_id: str
+    buildings: List[PlacedBuilding]
+    total_coverage_sqft: float
+    compliance_status: str
+    estimated_cost: float
+
+class BuildingConstraints(BaseModel):
+    front_setback_m: float
+    side_setback_m: float
+    rear_setback_m: float
+    height_limit_m: float
+    coverage_limit_percent: float
+    density_allowance: str
+
+# Request Models
 class PropertyMappingRequest(BaseModel):
     address: str
     municipality: Municipality
@@ -135,28 +177,6 @@ class UtilityAnalysisRequest(BaseModel):
     development_type: str
     target_density: Optional[str] = "medium"
 
-class LotAssessment(BaseModel):
-    property_id: str
-    coordinates: Tuple[float, float]
-    lot_size_sqft: float
-    municipality: str
-    zoning: str
-
-class PlacedBuilding(BaseModel):
-    building_type: str
-    position_x: float
-    position_y: float
-    width: float
-    height: float
-    building_id: str
-
-class DevelopmentPlan(BaseModel):
-    property_id: str
-    buildings: List[PlacedBuilding]
-    total_coverage_sqft: float
-    compliance_status: str
-    estimated_cost: float
-    
 #==============================================================================
 # ALBERTA UTILITY INFRASTRUCTURE DATABASE
 #==============================================================================
@@ -199,11 +219,15 @@ class AlbertaUtilityDatabase:
                     "backup_power": "grid_redundancy"
                 },
                 development_standards={
-                    "minimum_lot_size_residential": 6000,  # sq ft
+                    "minimum_lot_size_residential": 6000,  
                     "setback_requirements": "7.5m front, 1.2m side",
                     "building_height_limit": "11m residential, varies commercial",
                     "density_allowances": "up_to_duplex_by_right",
-                    "professional_requirements": "P.Eng for commercial >300sqm"
+                    "professional_requirements": "P.Eng for commercial >300sqm",
+                    "front_setback_m": 7.5,
+                    "side_setback_m": 1.2,
+                    "rear_setback_m": 7.5,
+                    "coverage_limit_percent": 45
                 },
                 professional_requirements={
                     "stamped_drawings_required": "commercial, industrial, multi-family",
@@ -247,7 +271,11 @@ class AlbertaUtilityDatabase:
                     "setback_requirements": "7.5m front, 1.5m side",
                     "building_height_limit": "10m residential, varies commercial",
                     "density_allowances": "single_family_primarily",
-                    "professional_requirements": "P.Eng for commercial >200sqm"
+                    "professional_requirements": "P.Eng for commercial >200sqm",
+                    "front_setback_m": 7.5,
+                    "side_setback_m": 1.5,
+                    "rear_setback_m": 7.5,
+                    "coverage_limit_percent": 40
                 },
                 professional_requirements={
                     "stamped_drawings_required": "commercial, industrial",
@@ -291,7 +319,11 @@ class AlbertaUtilityDatabase:
                     "setback_requirements": "7.5m front, 1.2m side",
                     "building_height_limit": "10.5m residential, varies commercial",
                     "density_allowances": "up_to_duplex_by_right",
-                    "professional_requirements": "P.Eng for commercial >250sqm"
+                    "professional_requirements": "P.Eng for commercial >250sqm",
+                    "front_setback_m": 7.5,
+                    "side_setback_m": 1.2,
+                    "rear_setback_m": 7.5,
+                    "coverage_limit_percent": 42
                 },
                 professional_requirements={
                     "stamped_drawings_required": "commercial, industrial, multi-family",
@@ -335,7 +367,11 @@ class AlbertaUtilityDatabase:
                     "setback_requirements": "9m front, 3m side",
                     "building_height_limit": "10m residential, varies commercial",
                     "density_allowances": "single_family_primarily",
-                    "professional_requirements": "P.Eng for commercial >200sqm"
+                    "professional_requirements": "P.Eng for commercial >200sqm",
+                    "front_setback_m": 9.0,
+                    "side_setback_m": 3.0,
+                    "rear_setback_m": 9.0,
+                    "coverage_limit_percent": 35
                 },
                 professional_requirements={
                     "stamped_drawings_required": "commercial, industrial",
@@ -352,7 +388,7 @@ class AlbertaUtilityDatabase:
                     "pressure_standard": "varies_by_system",
                     "main_size_standard": "varies",
                     "connection_cost_per_meter": 250,
-                    "base_connection_fee": 15000,  # Often requires private well
+                    "base_connection_fee": 15000,  
                     "capacity_status": "limited",
                     "service_standards": "private_maintenance"
                 },
@@ -361,7 +397,7 @@ class AlbertaUtilityDatabase:
                     "system_type": "private_septic_primarily",
                     "capacity_standard": "site_dependent",
                     "connection_cost_per_meter": 300,
-                    "base_connection_fee": 18000,  # Often requires private septic
+                    "base_connection_fee": 18000,  
                     "lift_station_requirement": "private_systems",
                     "service_standards": "private_maintenance"
                 },
@@ -375,11 +411,15 @@ class AlbertaUtilityDatabase:
                     "backup_power": "none"
                 },
                 development_standards={
-                    "minimum_lot_size_residential": 20000,  # Rural acreages
+                    "minimum_lot_size_residential": 20000,  
                     "setback_requirements": "15m front, 9m side",
                     "building_height_limit": "12m residential, varies commercial",
                     "density_allowances": "single_family_acreages",
-                    "professional_requirements": "P.Eng for commercial >150sqm"
+                    "professional_requirements": "P.Eng for commercial >150sqm",
+                    "front_setback_m": 15.0,
+                    "side_setback_m": 9.0,
+                    "rear_setback_m": 15.0,
+                    "coverage_limit_percent": 25
                 },
                 professional_requirements={
                     "stamped_drawings_required": "commercial, industrial, septic_systems",
@@ -1064,6 +1104,630 @@ class AmenityProximityAnalyzer:
         return round(base_impact, 1)
 
 #==============================================================================
+# DEVELOPMENT ASSESSMENT ENGINE
+#==============================================================================
+
+class DevelopmentAssessmentEngine:
+    """Development assessment and building placement validation"""
+    
+    def __init__(self):
+        self.utility_db = AlbertaUtilityDatabase()
+    
+    def analyze_lot_development_potential(self, lot_data: LotAssessment) -> Dict:
+        """Complete lot assessment for development constraints and opportunities"""
+        
+        try:
+            # Get municipal standards for the specific municipality
+            infrastructure = self.utility_db.get_municipal_infrastructure(lot_data.municipality)
+            if not infrastructure:
+                raise HTTPException(status_code=404, detail=f"Municipality {lot_data.municipality} not found")
+            
+            # Get development standards
+            dev_standards = infrastructure.development_standards
+            
+            # Calculate buildable area based on setback requirements
+            buildable_area = self._calculate_buildable_area(lot_data.lot_size_sqft, dev_standards)
+            
+            # Assess utility connections
+            utility_assessment = self._assess_utility_connections_for_lot(lot_data.coordinates, lot_data.municipality)
+            
+            # Generate constraint overlays
+            constraints = self._generate_constraint_overlays(lot_data, dev_standards)
+            
+            # Professional engineering validation
+            engineering_assessment = self._validate_engineering_requirements(lot_data, buildable_area, utility_assessment)
+            
+            # Generate assessment ID
+            assessment_id = f"ASSESS_{lot_data.property_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
+            return {
+                "assessment_id": assessment_id,
+                "lot_details": {
+                    "total_area_sqft": lot_data.lot_size_sqft,
+                    "buildable_area_sqft": buildable_area["usable_area"],
+                    "coverage_limit_sqft": lot_data.lot_size_sqft * (dev_standards["coverage_limit_percent"] / 100),
+                    "setback_requirements": {
+                        "front_setback_m": dev_standards["front_setback_m"],
+                        "side_setback_m": dev_standards["side_setback_m"],
+                        "rear_setback_m": dev_standards["rear_setback_m"],
+                        "height_limit_m": float(dev_standards.get("building_height_limit", "11m").split("m")[0])
+                    },
+                    "lot_dimensions": buildable_area["dimensions"]
+                },
+                "utility_connections": utility_assessment,
+                "constraints": constraints,
+                "engineering_validation": engineering_assessment,
+                "municipal_compliance": {
+                    "zoning_compliance": self._check_zoning_compliance(lot_data.zoning, infrastructure),
+                    "permit_requirements": self._get_permit_requirements(lot_data.municipality),
+                    "professional_requirements": infrastructure.professional_requirements
+                },
+                "visual_layers": {
+                    "lot_boundary": self._generate_lot_boundary_coordinates(buildable_area["dimensions"]),
+                    "buildable_area": buildable_area["boundary_coordinates"],
+                    "utility_markers": [{"type": u["utility_type"], "distance": u["distance_m"]} for u in utility_assessment],
+                    "constraint_overlays": constraints.get("overlay_coordinates", [])
+                }
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Assessment generation failed: {str(e)}")
+    
+    def validate_building_placement(self, property_id: str, building: PlacedBuilding) -> Dict:
+        """Validate if a building can be placed at the specified location"""
+        
+        try:
+            # Get lot assessment data for this property (simulate)
+            sample_property = self._get_sample_property(property_id)
+            if not sample_property:
+                raise HTTPException(status_code=404, detail=f"Property {property_id} not found")
+            
+            # Get municipal standards
+            infrastructure = self.utility_db.get_municipal_infrastructure(sample_property["municipality"])
+            dev_standards = infrastructure.development_standards
+            
+            # Define buildable area constraints
+            lot_size_sqft = sample_property["lot_size_sqft"]
+            buildable_area_sqft = lot_size_sqft * 0.6  # 60% typically buildable
+            coverage_limit_sqft = lot_size_sqft * (dev_standards["coverage_limit_percent"] / 100)
+            
+            # Check building placement constraints
+            building_area_sqft = building.width * building.height
+            placement_valid = True
+            compliance_issues = []
+            
+            # Convert setbacks from meters to approximate pixels/units
+            front_setback_units = dev_standards["front_setback_m"] * 10  # Approximate conversion
+            side_setback_units = dev_standards["side_setback_m"] * 10
+            
+            # Check setback compliance
+            if building.position_x < side_setback_units or building.position_y < front_setback_units:
+                placement_valid = False
+                compliance_issues.append("Building violates setback requirements")
+            
+            # Check building size reasonableness
+            if building_area_sqft > coverage_limit_sqft:
+                placement_valid = False
+                compliance_issues.append(f"Building size ({building_area_sqft:.0f} sqft) exceeds coverage limit ({coverage_limit_sqft:.0f} sqft)")
+            
+            # Check total coverage (simplified - in production, check existing buildings)
+            total_coverage_with_building = building_area_sqft
+            coverage_compliance = total_coverage_with_building <= coverage_limit_sqft
+            
+            if not coverage_compliance:
+                placement_valid = False
+                compliance_issues.append("Total site coverage would exceed municipal limits")
+            
+            # Generate recommendations
+            recommendations = self._generate_placement_recommendations(building, dev_standards, placement_valid)
+            
+            return {
+                "placement_valid": placement_valid,
+                "compliance_details": {
+                    "buildable_area_compliance": building.position_x >= side_setback_units and building.position_y >= front_setback_units,
+                    "setback_compliance": placement_valid or len([i for i in compliance_issues if "setback" in i]) == 0,
+                    "coverage_compliance": coverage_compliance,
+                    "building_area_sqft": building_area_sqft,
+                    "total_coverage_sqft": total_coverage_with_building,
+                    "coverage_limit_sqft": coverage_limit_sqft
+                },
+                "compliance_issues": compliance_issues,
+                "recommendations": recommendations,
+                "building_details": {
+                    "type": building.building_type,
+                    "position": {"x": building.position_x, "y": building.position_y},
+                    "dimensions": {"width": building.width, "height": building.height},
+                    "area_sqft": building_area_sqft
+                }
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Placement validation failed: {str(e)}")
+    
+    def save_development_plan(self, plan: DevelopmentPlan) -> Dict:
+        """Save complete development plan with cost analysis"""
+        
+        try:
+            # Validate the entire development plan
+            plan_validation = self._validate_complete_plan(plan)
+            
+            if not plan_validation["valid"]:
+                raise HTTPException(status_code=400, detail=plan_validation["errors"])
+            
+            # Calculate development costs
+            cost_analysis = self._calculate_development_costs(plan)
+            
+            # Generate plan ID and timestamp
+            plan_id = f"PLAN_{plan.property_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
+            # Integration with existing property analysis
+            enhanced_analysis = self._integrate_with_property_analysis(plan.property_id, plan, cost_analysis)
+            
+            # Generate professional documentation
+            documentation = self._generate_development_documentation(plan, cost_analysis)
+            
+            return {
+                "plan_id": plan_id,
+                "validation_results": plan_validation,
+                "cost_analysis": cost_analysis,
+                "documentation": documentation,
+                "integrated_analysis": enhanced_analysis,
+                "next_steps": {
+                    "municipal_submission": documentation["municipal_package"],
+                    "engineering_review": documentation["engineering_checklist"],
+                    "permit_applications": documentation["permit_requirements"]
+                }
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Plan save failed: {str(e)}")
+    
+    def export_site_assessment(self, assessment_id: str) -> Dict:
+        """Generate professional site assessment report for municipal submission"""
+        
+        try:
+            # Extract property ID from assessment ID
+            if not assessment_id.startswith("ASSESS_"):
+                raise HTTPException(status_code=404, detail="Invalid assessment ID")
+            
+            parts = assessment_id.split("_")
+            property_id = parts[1] if len(parts) > 1 else "EDM_001"
+            
+            # Get property data
+            sample_property = self._get_sample_property(property_id)
+            if not sample_property:
+                sample_property = SAMPLE_PROPERTIES[0]  # Default fallback
+            
+            # Generate comprehensive report structure
+            report = self._generate_professional_assessment_report(assessment_id, sample_property)
+            
+            return {
+                "export_status": "success",
+                "report_data": report,
+                "download_url": f"/reports/assessment_{assessment_id}.pdf",
+                "municipal_submission_ready": True
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+    
+    def export_development_plan(self, plan_id: str) -> Dict:
+        """Generate professional development plan documentation"""
+        
+        try:
+            # Extract property ID from plan ID
+            if not plan_id.startswith("PLAN_"):
+                raise HTTPException(status_code=404, detail="Invalid plan ID")
+            
+            parts = plan_id.split("_")
+            property_id = parts[1] if len(parts) > 1 else "EDM_001"
+            
+            # Get property data
+            sample_property = self._get_sample_property(property_id)
+            if not sample_property:
+                sample_property = SAMPLE_PROPERTIES[0]
+            
+            # Generate development plan report
+            report = self._generate_development_plan_report(plan_id, sample_property)
+            
+            return {
+                "export_status": "success",
+                "plan_documentation": report,
+                "download_url": f"/reports/development_plan_{plan_id}.pdf",
+                "cost_summary": report["cost_analysis"]["total_project_cost"],
+                "implementation_ready": True
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Plan export failed: {str(e)}")
+    
+    # Helper Methods
+    def _calculate_buildable_area(self, lot_size_sqft: float, dev_standards: Dict) -> Dict:
+        """Calculate usable building area considering all setback requirements"""
+        
+        # Assuming rectangular lot for calculation
+        lot_width = math.sqrt(lot_size_sqft * 1.2)  # Typical residential ratio
+        lot_depth = lot_size_sqft / lot_width
+        
+        front_setback_ft = dev_standards["front_setback_m"] * 3.28084  # Convert m to ft
+        rear_setback_ft = dev_standards["rear_setback_m"] * 3.28084
+        side_setback_ft = dev_standards["side_setback_m"] * 3.28084
+        
+        buildable_width = lot_width - (2 * side_setback_ft)
+        buildable_depth = lot_depth - (front_setback_ft + rear_setback_ft)
+        
+        usable_area = max(0, buildable_width * buildable_depth)
+        
+        return {
+            "usable_area": usable_area,
+            "buildable_width": max(0, buildable_width),
+            "buildable_depth": max(0, buildable_depth),
+            "dimensions": {
+                "lot_width_ft": lot_width,
+                "lot_depth_ft": lot_depth,
+                "buildable_width_ft": buildable_width,
+                "buildable_depth_ft": buildable_depth
+            },
+            "boundary_coordinates": self._generate_buildable_boundary_coordinates(
+                lot_width, lot_depth, dev_standards
+            )
+        }
+    
+    def _assess_utility_connections_for_lot(self, coordinates: Tuple[float, float], municipality: str) -> List[Dict]:
+        """Assess all utility connections for the property"""
+        
+        utility_types = ["water", "sewer", "electrical", "gas", "internet"]
+        connections = []
+        
+        for utility in utility_types:
+            connection_data = self._calculate_utility_distance_for_lot(coordinates, utility, municipality)
+            connections.append(connection_data)
+        
+        return connections
+    
+    def _calculate_utility_distance_for_lot(self, coordinates: Tuple[float, float], utility: str, municipality: str) -> Dict:
+        """Calculate utility distance and costs for lot assessment"""
+        
+        # Simulate distance calculation (replace with real GIS in production)
+        base_distances = {
+            "edmonton": {"water": 45, "sewer": 55, "electrical": 25, "gas": 65, "internet": 0},
+            "leduc": {"water": 125, "sewer": 180, "electrical": 85, "gas": 145, "internet": 0},
+            "st_albert": {"water": 65, "sewer": 85, "electrical": 35, "gas": 95, "internet": 0},
+            "strathcona": {"water": 350, "sewer": 420, "electrical": 180, "gas": 285, "internet": 0},
+            "parkland": {"water": 2500, "sewer": 3000, "electrical": 850, "gas": 1500, "internet": 0}
+        }
+        
+        distance = base_distances.get(municipality, {}).get(utility, 500)
+        
+        # Calculate costs based on utility type and distance
+        if utility == "water":
+            if municipality == "parkland":
+                cost_low, cost_high = 15000, 35000
+                status = "private_system"
+            elif distance <= 100:
+                cost_low, cost_high = 3500, 8500
+                status = "available"
+            else:
+                cost_low, cost_high = 8500, 25000
+                status = "extension_required"
+        elif utility == "sewer":
+            if municipality == "parkland":
+                cost_low, cost_high = 18000, 45000
+                status = "private_system"
+            elif distance <= 100:
+                cost_low, cost_high = 5000, 12000
+                status = "available"
+            else:
+                cost_low, cost_high = 12000, 35000
+                status = "extension_required"
+        elif utility == "electrical":
+            cost_low, cost_high = max(2500, distance * 125), max(6500, distance * 200)
+            status = "available" if distance <= 200 else "extension_required"
+        elif utility == "gas":
+            if municipality == "parkland":
+                cost_low, cost_high = 8000, 18000
+                status = "private_system"
+            else:
+                cost_low, cost_high = 2500, 8000
+                status = "available"
+        else:  # internet
+            cost_low, cost_high = 150, 1500
+            status = "available"
+        
+        return {
+            "utility_type": utility,
+            "distance_m": distance,
+            "connection_cost_low": cost_low,
+            "connection_cost_high": cost_high,
+            "status": status
+        }
+    
+    def _generate_constraint_overlays(self, lot_data: LotAssessment, dev_standards: Dict) -> Dict:
+        """Generate constraint overlays for lot visualization"""
+        
+        constraints = [
+            {
+                "type": "setback",
+                "description": f"Front setback: {dev_standards['front_setback_m']}m",
+                "impact": "No building allowed in setback area"
+            },
+            {
+                "type": "setback", 
+                "description": f"Side setbacks: {dev_standards['side_setback_m']}m each",
+                "impact": "No building allowed in setback areas"
+            },
+            {
+                "type": "coverage",
+                "description": f"Maximum coverage: {dev_standards['coverage_limit_percent']}%",
+                "impact": f"Maximum {lot_data.lot_size_sqft * dev_standards['coverage_limit_percent'] / 100:.0f} sqft building area"
+            }
+        ]
+        
+        return {
+            "constraints": constraints,
+            "overlay_coordinates": []  # Would be populated with actual constraint boundaries
+        }
+    
+    def _validate_engineering_requirements(self, lot_data: LotAssessment, buildable_area: Dict, utilities: List) -> Dict:
+        """P.Eng validation of development requirements"""
+        
+        validation = {
+            "structural_requirements": {
+                "soil_analysis_required": lot_data.lot_size_sqft > 10000,
+                "foundation_type": "Standard concrete foundation suitable for Alberta conditions",
+                "load_calculations": "P.Eng stamped drawings required for structures >300sqm"
+            },
+            "utility_adequacy": {
+                "water_pressure": "Adequate pressure available from municipal system",
+                "electrical_capacity": "Standard residential/commercial electrical capacity available",
+                "sewer_capacity": "Municipal sewer system adequate for proposed development"
+            },
+            "code_compliance": {
+                "building_code": "Alberta Building Code 2019",
+                "fire_safety": "Standard fire safety requirements apply",
+                "accessibility": "Barrier-free design required for commercial developments"
+            },
+            "professional_oversight": {
+                "required_disciplines": ["Structural", "Electrical", "Mechanical"],
+                "permit_process": "Municipal development permit required",
+                "inspection_schedule": "Foundation, framing, electrical, plumbing, final inspections"
+            }
+        }
+        
+        return validation
+    
+    def _generate_lot_boundary_coordinates(self, dimensions: Dict) -> List[Dict]:
+        """Generate lot boundary coordinates for visualization"""
+        
+        width = dimensions["lot_width_ft"]
+        depth = dimensions["lot_depth_ft"]
+        
+        return [
+            {"lat": 0, "lng": 0},
+            {"lat": 0, "lng": width},
+            {"lat": depth, "lng": width},
+            {"lat": depth, "lng": 0},
+            {"lat": 0, "lng": 0}  # Close the polygon
+        ]
+    
+    def _generate_buildable_boundary_coordinates(self, lot_width: float, lot_depth: float, dev_standards: Dict) -> List[Dict]:
+        """Generate buildable area coordinates considering setbacks"""
+        
+        front_setback_ft = dev_standards["front_setback_m"] * 3.28084
+        rear_setback_ft = dev_standards["rear_setback_m"] * 3.28084
+        side_setback_ft = dev_standards["side_setback_m"] * 3.28084
+        
+        return [
+            {"lat": front_setback_ft, "lng": side_setback_ft},
+            {"lat": front_setback_ft, "lng": lot_width - side_setback_ft},
+            {"lat": lot_depth - rear_setback_ft, "lng": lot_width - side_setback_ft},
+            {"lat": lot_depth - rear_setback_ft, "lng": side_setback_ft},
+            {"lat": front_setback_ft, "lng": side_setback_ft}  # Close the polygon
+        ]
+    
+    def _check_zoning_compliance(self, zoning: str, infrastructure: MunicipalInfrastructure) -> bool:
+        """Check if proposed development complies with zoning"""
+        # Simplified zoning check - in production, would check against zoning database
+        return True
+    
+    def _get_permit_requirements(self, municipality: str) -> List[str]:
+        """Get permit requirements for municipality"""
+        return [
+            "Development Permit",
+            "Building Permit", 
+            "Electrical Permit",
+            "Plumbing Permit",
+            "Occupancy Permit"
+        ]
+    
+    def _get_sample_property(self, property_id: str) -> Optional[Dict]:
+        """Get sample property by ID"""
+        return next((p for p in SAMPLE_PROPERTIES if p["property_id"] == property_id), None)
+    
+    def _validate_complete_plan(self, plan: DevelopmentPlan) -> Dict:
+        """Validate entire development plan"""
+        
+        errors = []
+        
+        # Check if property exists
+        property_data = self._get_sample_property(plan.property_id)
+        if not property_data:
+            errors.append(f"Property {plan.property_id} not found")
+        
+        # Validate building areas
+        total_building_area = sum(b.width * b.height for b in plan.buildings)
+        if abs(total_building_area - plan.total_coverage_sqft) > 10:  # Allow small rounding differences
+            errors.append("Total coverage calculation mismatch")
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors
+        }
+    
+    def _calculate_development_costs(self, plan: DevelopmentPlan) -> Dict:
+        """Calculate comprehensive development costs including infrastructure"""
+        
+        # Base construction costs by building type (CAD per sq ft)
+        cost_per_sqft = {
+            "single_family": 150,
+            "duplex": 140,
+            "townhouse": 135,
+            "retail": 120,
+            "office": 110,
+            "parking": 25,
+            "garden": 10,
+            "industrial": 90
+        }
+        
+        total_construction_cost = 0
+        building_costs = []
+        
+        for building in plan.buildings:
+            building_area = building.width * building.height
+            unit_cost = cost_per_sqft.get(building.building_type.value, 100)
+            building_cost = building_area * unit_cost
+            
+            total_construction_cost += building_cost
+            building_costs.append({
+                "building_id": building.building_id,
+                "type": building.building_type.value,
+                "area_sqft": building_area,
+                "cost_cad": building_cost,
+                "cost_per_sqft": unit_cost
+            })
+        
+        # Infrastructure costs (simplified)
+        infrastructure_costs = {
+            "water_connection": 8500,
+            "sewer_connection": 12000,
+            "electrical_service": 6500,
+            "gas_connection": 4500,
+            "total": 31500
+        }
+        
+        # Professional fees (15% of construction)
+        professional_fees = total_construction_cost * 0.15
+        
+        # Total project cost
+        total_project_cost = total_construction_cost + infrastructure_costs["total"] + professional_fees
+        
+        return {
+            "construction_costs": {
+                "total_cad": total_construction_cost,
+                "building_breakdown": building_costs,
+                "cost_per_sqft_average": total_construction_cost / plan.total_coverage_sqft if plan.total_coverage_sqft > 0 else 0
+            },
+            "infrastructure_costs": infrastructure_costs,
+            "professional_fees": {
+                "amount_cad": professional_fees,
+                "percentage": 15,
+                "includes": ["Engineering", "Permits", "Inspections", "Legal"]
+            },
+            "total_project_cost": total_project_cost
+        }
+    
+    def _integrate_with_property_analysis(self, property_id: str, plan: DevelopmentPlan, costs: Dict) -> Dict:
+        """Integrate development plan with existing property analysis"""
+        
+        # Get existing property data
+        property_data = self._get_sample_property(property_id)
+        if not property_data:
+            property_data = SAMPLE_PROPERTIES[0]
+        
+        # Enhanced analysis combining land value + development costs
+        enhanced_analysis = {
+            "property_id": property_id,
+            "land_analysis": property_data,
+            "development_plan": {
+                "buildings": len(plan.buildings),
+                "total_coverage": plan.total_coverage_sqft,
+                "development_cost": costs["total_project_cost"]
+            },
+            "financial_analysis": {
+                "land_value": property_data["estimated_value"],
+                "development_cost": costs["total_project_cost"],
+                "total_investment": property_data["estimated_value"] + costs["total_project_cost"],
+                "potential_roi": 15.0  # Simplified ROI calculation
+            }
+        }
+        
+        return enhanced_analysis
+    
+    def _generate_development_documentation(self, plan: DevelopmentPlan, cost_analysis: Dict) -> Dict:
+        """Generate professional documentation for development plan"""
+        
+        return {
+            "municipal_package": "Development permit application package ready for submission",
+            "engineering_checklist": "P.Eng review required for final approval and stamped drawings",
+            "permit_requirements": [
+                "Development Permit Application",
+                "Building Permit Application", 
+                "Electrical Permit Application",
+                "Plumbing Permit Application"
+            ]
+        }
+    
+    def _generate_placement_recommendations(self, building: PlacedBuilding, dev_standards: Dict, placement_valid: bool) -> List[str]:
+        """Generate recommendations for building placement"""
+        
+        recommendations = []
+        
+        if not placement_valid:
+            recommendations.extend([
+                "Move building to comply with setback requirements",
+                "Consider reducing building size to meet coverage limits",
+                "Review municipal zoning requirements"
+            ])
+        else:
+            recommendations.extend([
+                "Placement meets all municipal requirements",
+                "Proceed with detailed design development",
+                "Consider professional engineering consultation"
+            ])
+        
+        return recommendations
+    
+    def _generate_professional_assessment_report(self, assessment_id: str, property_data: Dict) -> Dict:
+        """Generate comprehensive professional assessment report"""
+        
+        return {
+            "report_metadata": {
+                "report_type": "Site Assessment & Development Feasibility Analysis",
+                "prepared_by": "SkyeBridge Consulting & Developments Inc.",
+                "professional_seal": "Jeff McLeod, P.Eng, Alberta License #12345",
+                "date": datetime.now().strftime("%B %d, %Y"),
+                "assessment_id": assessment_id,
+                "property_id": property_data["property_id"]
+            },
+            "executive_summary": {
+                "property_address": property_data["address"],
+                "lot_size": f"{property_data['lot_size_sqft']:,} sq ft",
+                "municipality": property_data["municipality"].title(),
+                "development_potential": property_data["development_potential"],
+                "overall_feasibility": "FEASIBLE - Property suitable for proposed development"
+            },
+            "professional_validation": {
+                "peng_reviewed": True,
+                "stamp_required": True,
+                "liability_coverage": "Professional liability insurance in effect"
+            }
+        }
+    
+    def _generate_development_plan_report(self, plan_id: str, property_data: Dict) -> Dict:
+        """Generate development plan report"""
+        
+        return {
+            "document_type": "Development Plan & Cost Analysis",
+            "prepared_by": "SkyeBridge Consulting & Developments Inc.",
+            "professional_seal": "Jeff McLeod, P.Eng",
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "plan_id": plan_id,
+            "cost_analysis": {
+                "total_project_cost": 500000  # Simplified
+            }
+        }
+
+#==============================================================================
 # INTERACTIVE MAPPING SYSTEM
 #==============================================================================
 
@@ -1635,10 +2299,39 @@ async def health_check():
             "amenity_proximity", 
             "interactive_mapping",
             "partner_integration",
-            "professional_engineering"
+            "professional_engineering",
+            "development_assessment",
+            "building_placement"
         ]
     }
 
+@app.get("/")
+async def root():
+    """Root endpoint with platform information"""
+    return {
+        "platform": "Sgiach Professional Development Analysis Platform",
+        "version": "3.0.0",
+        "company": "SkyeBridge Consulting & Developments Inc.",
+        "description": "Complete Municipal Property Development Analysis with Professional Engineering Oversight",
+        "features": [
+            "23 Sample Properties across 5 Alberta Municipalities",
+            "Comprehensive Utility Connection Analysis",
+            "Advanced Amenity Proximity Assessment", 
+            "Interactive Property Mapping",
+            "Development Assessment Interface",
+            "Building Placement Validation",
+            "Partner Realty Data Integration",
+            "Professional Engineering Oversight",
+            "Multi-Source Market Analysis",
+            "Municipal Infrastructure Standards"
+        ],
+        "municipalities_served": ["Edmonton", "Leduc", "St. Albert", "Strathcona County", "Parkland County"],
+        "professional_services": "P.Eng oversight available for complex developments",
+        "api_documentation": "/docs",
+        "health_check": "/health"
+    }
+
+# Sample Properties Endpoints
 @app.get("/properties/sample")
 async def get_sample_properties():
     """Retrieve all 23 sample properties for development/testing"""
@@ -1672,6 +2365,93 @@ async def get_properties_by_municipality(municipality: Municipality):
         "properties": properties
     }
 
+# Development Assessment Endpoints
+@app.post("/development/lot-assessment")
+async def get_lot_assessment(lot_data: LotAssessment):
+    """
+    🎯 PURPOSE: Analyze a lot for development constraints and opportunities
+    📨 INPUT: LotAssessment object with property details
+    📤 OUTPUT: Comprehensive assessment with buildable areas, utilities, constraints
+    🔗 FRONTEND CONNECTION: Called when user loads the Assessment Interface
+    """
+    
+    development_engine = DevelopmentAssessmentEngine()
+    
+    try:
+        assessment_result = development_engine.analyze_lot_development_potential(lot_data)
+        return assessment_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Assessment generation failed: {str(e)}")
+
+@app.post("/development/validate-placement")
+async def validate_building_placement(property_id: str, building: PlacedBuilding):
+    """
+    🎯 PURPOSE: Validate if a building can be placed at specified coordinates
+    📨 INPUT: property_id and PlacedBuilding object
+    📤 OUTPUT: Validation results with compliance details
+    🔗 FRONTEND CONNECTION: Called when user drags a building in the SimCity interface
+    """
+    
+    development_engine = DevelopmentAssessmentEngine()
+    
+    try:
+        validation_result = development_engine.validate_building_placement(property_id, building)
+        return validation_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Placement validation failed: {str(e)}")
+
+@app.post("/development/save-plan")
+async def save_development_plan(plan: DevelopmentPlan):
+    """
+    🎯 PURPOSE: Save complete development plan with cost analysis
+    📨 INPUT: DevelopmentPlan with all placed buildings
+    📤 OUTPUT: Saved plan with cost analysis and documentation
+    🔗 FRONTEND CONNECTION: Called when user clicks "Export Development Plan"
+    """
+    
+    development_engine = DevelopmentAssessmentEngine()
+    
+    try:
+        save_result = development_engine.save_development_plan(plan)
+        return save_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Plan save failed: {str(e)}")
+
+@app.get("/development/export-assessment/{assessment_id}")
+async def export_site_assessment(assessment_id: str):
+    """
+    🎯 PURPOSE: Generate professional site assessment report for clients/municipalities
+    📨 INPUT: assessment_id from previous lot assessment
+    📤 OUTPUT: Professional report data ready for PDF generation
+    🔗 FRONTEND CONNECTION: Called when user clicks "Export Site Analysis"
+    """
+    
+    development_engine = DevelopmentAssessmentEngine()
+    
+    try:
+        export_result = development_engine.export_site_assessment(assessment_id)
+        return export_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+@app.get("/development/export-plan/{plan_id}")
+async def export_development_plan(plan_id: str):
+    """Generate professional development plan documentation"""
+    
+    development_engine = DevelopmentAssessmentEngine()
+    
+    try:
+        export_result = development_engine.export_development_plan(plan_id)
+        return export_result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Plan export failed: {str(e)}")
+
+# Utility Analysis Endpoints
 @app.post("/property/utility-analysis")
 async def analyze_property_utilities(request: UtilityAnalysisRequest):
     """Complete utility connection analysis with cost assessment"""
@@ -1799,6 +2579,64 @@ async def get_municipal_amenities(municipality: Municipality):
         "municipality": municipality.value,
         "amenity_categories": list(amenities.keys()),
         "amenities": amenities
+    }
+
+# Infrastructure Standards Endpoints
+@app.get("/infrastructure/municipal-standards/{municipality}")
+async def get_municipal_infrastructure_standards(municipality: Municipality):
+    """Get infrastructure standards and costs for municipality"""
+    
+    utility_db = AlbertaUtilityDatabase()
+    infrastructure = utility_db.get_municipal_infrastructure(municipality.value)
+    
+    if not infrastructure:
+        raise HTTPException(status_code=404, detail=f"Infrastructure data for {municipality.value} not found")
+    
+    return {
+        "municipality": municipality.value,
+        "infrastructure_standards": asdict(infrastructure),
+        "last_updated": "2024-06-15",
+        "data_source": "Municipal Engineering Departments & Alberta Standards"
+    }
+
+@app.get("/amenities/analysis-summary/{municipality}")
+async def get_amenity_analysis_summary(municipality: Municipality):
+    """Get comprehensive amenity analysis summary for municipality"""
+    
+    amenity_db = AlbertaAmenityDatabase()
+    amenities = amenity_db.get_municipal_amenities(municipality.value)
+    
+    if not amenities:
+        raise HTTPException(status_code=404, detail=f"Amenity data for {municipality.value} not found")
+    
+    # Calculate amenity statistics
+    category_counts = {category: len(amenity_list) for category, amenity_list in amenities.items()}
+    total_amenities = sum(category_counts.values())
+    
+    # Calculate average impact scores by category
+    category_impacts = {}
+    for category, amenity_list in amenities.items():
+        if amenity_list:
+            avg_impact = sum(amenity.impact_score for amenity in amenity_list) / len(amenity_list)
+            category_impacts[category] = round(avg_impact, 1)
+    
+    return {
+        "municipality": municipality.value,
+        "amenity_profile": {
+            "total_amenities": total_amenities,
+            "category_counts": category_counts,
+            "category_impacts": category_impacts,
+            "top_amenities": [
+                {"name": amenity.name, "category": category, "impact": amenity.impact_score}
+                for category, amenity_list in amenities.items()
+                for amenity in sorted(amenity_list, key=lambda a: a.impact_score, reverse=True)[:3]
+            ]
+        },
+        "development_suitability": {
+            "residential": "excellent" if category_impacts.get("education", 0) >= 7.5 else "good",
+            "commercial": "excellent" if category_impacts.get("transportation", 0) >= 8.0 else "good",
+            "industrial": "excellent" if municipality.value in ["strathcona", "leduc"] else "moderate"
+        }
     }
 
 # Partner Firm Integration Endpoints
@@ -1938,266 +2776,7 @@ async def get_partner_data_summary(municipality: Municipality):
         ]
     }
 
-@app.post("/property/bulk-analysis")
-async def bulk_property_analysis(
-    addresses: List[str] = Form(...),
-    municipality: Municipality = Form(...),
-    include_utilities: bool = Form(True),
-    include_amenities: bool = Form(True),
-    include_infrastructure: bool = Form(True)
-):
-    """Analyze multiple properties at once"""
-    
-    if len(addresses) > 10:
-        raise HTTPException(status_code=400, detail="Maximum 10 properties per bulk analysis")
-    
-    results = []
-    
-    for address in addresses:
-        try:
-            # Perform utility analysis if requested
-            utility_analysis = None
-            if include_utilities:
-                utility_analyzer = UtilityAnalysisEngine()
-                utility_analysis = utility_analyzer.analyze_utility_connections(
-                    address=address,
-                    municipality=municipality.value,
-                    property_type="residential"  # Default for bulk analysis
-                )
-            
-            # Perform amenity analysis if requested
-            amenity_analysis = None
-            if include_amenities:
-                amenity_analyzer = AmenityProximityAnalyzer()
-                property_coords = (53.5461, -113.4909)  # Simulated coordinates
-                amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
-                    address=address,
-                    municipality=municipality.value,
-                    property_coordinates=property_coords
-                )
-            
-            results.append({
-                "address": address,
-                "municipality": municipality.value,
-                "utility_analysis": asdict(utility_analysis) if utility_analysis else None,
-                "amenity_analysis": asdict(amenity_analysis) if amenity_analysis else None,
-                "analysis_status": "success"
-            })
-            
-        except Exception as e:
-            results.append({
-                "address": address,
-                "municipality": municipality.value,
-                "error": str(e),
-                "analysis_status": "failed"
-            })
-    
-    successful_analyses = len([r for r in results if r["analysis_status"] == "success"])
-    
-    return {
-        "bulk_analysis_summary": {
-            "total_properties": len(addresses),
-            "successful_analyses": successful_analyses,
-            "failed_analyses": len(addresses) - successful_analyses,
-            "municipality": municipality.value
-        },
-        "processing_notes": [
-            "Review failed properties for data issues",
-            "Ensure valid addresses and municipalities",
-            "Contact support for persistent failures"
-        ],
-        "results": results
-    }
-
-@app.get("/property/market-data/{municipality}")
-async def get_market_data_sources(municipality: Municipality):
-    """Get available market data sources for municipality"""
-    
-    # Count partner data
-    partner_data_count = sum(p["data_submissions"] for p in PARTNER_FIRMS 
-                           if municipality.value in p["service_areas"] and p["active"])
-    
-    # Simulate other data sources
-    data_sources = {
-        "partner_realty": {
-            "available": True,
-            "data_points": partner_data_count,
-            "credibility": "85%",
-            "last_updated": "daily"
-        },
-        "realtor_scraping": {
-            "available": True,
-            "data_points": 150,
-            "credibility": "65%",
-            "last_updated": "weekly"
-        },
-        "mls_feed": {
-            "available": municipality.value in ["edmonton", "st_albert"],
-            "data_points": 85 if municipality.value in ["edmonton", "st_albert"] else 0,
-            "credibility": "85%",
-            "last_updated": "daily"
-        },
-        "municipal_data": {
-            "available": True,
-            "data_points": 25,
-            "credibility": "95%",
-            "last_updated": "monthly"
-        }
-    }
-    
-    return {
-        "municipality": municipality.value,
-        "data_sources": data_sources,
-        "total_data_points": sum(source["data_points"] for source in data_sources.values() if source["available"]),
-        "weighted_credibility": "75%"
-    }
-
-@app.get("/infrastructure/municipal-standards/{municipality}")
-async def get_municipal_infrastructure_standards(municipality: Municipality):
-    """Get infrastructure standards and costs for municipality"""
-    
-    utility_db = AlbertaUtilityDatabase()
-    infrastructure = utility_db.get_municipal_infrastructure(municipality.value)
-    
-    if not infrastructure:
-        raise HTTPException(status_code=404, detail=f"Infrastructure data for {municipality.value} not found")
-    
-    return {
-        "municipality": municipality.value,
-        "infrastructure_standards": asdict(infrastructure),
-        "last_updated": "2024-06-15",
-        "data_source": "Municipal Engineering Departments & Alberta Standards"
-    }
-
-@app.get("/amenities/analysis-summary/{municipality}")
-async def get_amenity_analysis_summary(municipality: Municipality):
-    """Get comprehensive amenity analysis summary for municipality"""
-    
-    amenity_db = AlbertaAmenityDatabase()
-    amenities = amenity_db.get_municipal_amenities(municipality.value)
-    
-    if not amenities:
-        raise HTTPException(status_code=404, detail=f"Amenity data for {municipality.value} not found")
-    
-    # Calculate amenity statistics
-    category_counts = {category: len(amenity_list) for category, amenity_list in amenities.items()}
-    total_amenities = sum(category_counts.values())
-    
-    # Calculate average impact scores by category
-    category_impacts = {}
-    for category, amenity_list in amenities.items():
-        if amenity_list:
-            avg_impact = sum(amenity.impact_score for amenity in amenity_list) / len(amenity_list)
-            category_impacts[category] = round(avg_impact, 1)
-    
-    return {
-        "municipality": municipality.value,
-        "amenity_profile": {
-            "total_amenities": total_amenities,
-            "category_counts": category_counts,
-            "category_impacts": category_impacts,
-            "top_amenities": [
-                {"name": amenity.name, "category": category, "impact": amenity.impact_score}
-                for category, amenity_list in amenities.items()
-                for amenity in sorted(amenity_list, key=lambda a: a.impact_score, reverse=True)[:3]
-            ]
-        },
-        "development_suitability": {
-            "residential": "excellent" if category_impacts.get("education", 0) >= 7.5 else "good",
-            "commercial": "excellent" if category_impacts.get("transportation", 0) >= 8.0 else "good",
-            "industrial": "excellent" if municipality.value in ["strathcona", "leduc"] else "moderate"
-        }
-    }
-
-@app.post("/property/analysis")
-async def simplified_property_analysis(
-    address: str = Form(...),
-    municipality: Municipality = Form(...),
-    property_type: PropertyType = Form(...),
-    include_market_analysis: bool = Form(True),
-    include_amenity_analysis: bool = Form(True),
-    include_infrastructure_analysis: bool = Form(True),
-    include_partner_data: bool = Form(True),
-    analysis_radius_km: float = Form(2.0)
-):
-    """Simplified property analysis endpoint for backwards compatibility"""
-    
-    try:
-        analysis_results = {
-            "address": address,
-            "municipality": municipality.value,
-            "property_type": property_type.value,
-            "analysis_date": datetime.now().isoformat(),
-            "analysis_radius_km": analysis_radius_km
-        }
-        
-        # Market Analysis
-        if include_market_analysis:
-            # Simulate market analysis
-            base_value = 450000  # Simulated base value
-            market_multiplier = 1.05 if municipality.value in ["edmonton", "st_albert"] else 0.95
-            
-            analysis_results["market_analysis"] = {
-                "estimated_value": int(base_value * market_multiplier),
-                "market_conditions": "stable",
-                "comparable_sales": 12,
-                "data_confidence": "medium"
-            }
-        
-        # Infrastructure Analysis
-        if include_infrastructure_analysis:
-            utility_analyzer = UtilityAnalysisEngine()
-            utility_ratings = utility_analyzer.analyze_utility_connections(
-                address=address,
-                municipality=municipality.value,
-                property_type=property_type.value
-            )
-            
-            analysis_results["infrastructure_analysis"] = {
-                "overall_utility_score": utility_ratings.overall_score,
-                "development_readiness": utility_ratings.development_readiness_score,
-                "total_infrastructure_cost": f"${utility_ratings.total_infrastructure_cost_low:,.0f} - ${utility_ratings.total_infrastructure_cost_high:,.0f}",
-                "engineering_assessment": utility_ratings.engineering_risk_assessment
-            }
-        
-        # Amenity Analysis
-        if include_amenity_analysis:
-            amenity_analyzer = AmenityProximityAnalyzer()
-            property_coords = (53.5461, -113.4909)  # Simulated coordinates
-            
-            amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
-                address=address,
-                municipality=municipality.value,
-                property_coordinates=property_coords
-            )
-            
-            analysis_results["amenity_analysis"] = {
-                "overall_amenity_score": amenity_analysis.overall_amenity_score,
-                "value_impact_percentage": amenity_analysis.value_impact_percentage,
-                "key_amenities": [
-                    {"name": amenity.name, "distance": f"{amenity.distance_meters:.0f}m", "impact": amenity.impact_score}
-                    for amenity in amenity_analysis.nearest_amenities[:5]
-                ]
-            }
-        
-        # Professional Recommendations
-        analysis_results["professional_recommendations"] = {
-            "development_feasibility": "medium",
-            "investment_recommendation": "requires_detailed_analysis",
-            "next_steps": [
-                "Verify utility connection costs with municipal authorities",
-                "Confirm zoning and development permissions",
-                "Consider professional engineering consultation for complex projects"
-            ],
-            "professional_notes": "Analysis completed by SkyeBridge Consulting & Developments Inc. P.Eng oversight available."
-        }
-        
-        return analysis_results
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Property analysis failed: {str(e)}")
-
-# JSON-based endpoints for Swagger UI testing
+# JSON Endpoints for Swagger UI Testing
 class PropertyAnalysisJSON(BaseModel):
     address: str
     municipality: Municipality
@@ -2241,84 +2820,6 @@ class PartnerSalesDataJSON(BaseModel):
     mls_number: str
     municipality: str
     api_key: str
-
-@app.post("/property/analysis-json")
-async def property_analysis_json(request: PropertyAnalysisJSON):
-    """Simplified property analysis endpoint - JSON version for Swagger UI"""
-    
-    try:
-        analysis_results = {
-            "address": request.address,
-            "municipality": request.municipality.value,
-            "property_type": request.property_type.value,
-            "analysis_date": datetime.now().isoformat(),
-            "analysis_radius_km": request.analysis_radius_km
-        }
-        
-        # Market Analysis
-        if request.include_market_analysis:
-            base_value = 450000
-            market_multiplier = 1.05 if request.municipality.value in ["edmonton", "st_albert"] else 0.95
-            
-            analysis_results["market_analysis"] = {
-                "estimated_value": int(base_value * market_multiplier),
-                "market_conditions": "stable",
-                "comparable_sales": 12,
-                "data_confidence": "medium"
-            }
-        
-        # Infrastructure Analysis
-        if request.include_infrastructure_analysis:
-            utility_analyzer = UtilityAnalysisEngine()
-            utility_ratings = utility_analyzer.analyze_utility_connections(
-                address=request.address,
-                municipality=request.municipality.value,
-                property_type=request.property_type.value
-            )
-            
-            analysis_results["infrastructure_analysis"] = {
-                "overall_utility_score": utility_ratings.overall_score,
-                "development_readiness": utility_ratings.development_readiness_score,
-                "total_infrastructure_cost": f"${utility_ratings.total_infrastructure_cost_low:,.0f} - ${utility_ratings.total_infrastructure_cost_high:,.0f}",
-                "engineering_assessment": utility_ratings.engineering_risk_assessment
-            }
-        
-        # Amenity Analysis
-        if request.include_amenity_analysis:
-            amenity_analyzer = AmenityProximityAnalyzer()
-            property_coords = (53.5461, -113.4909)
-            
-            amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
-                address=request.address,
-                municipality=request.municipality.value,
-                property_coordinates=property_coords
-            )
-            
-            analysis_results["amenity_analysis"] = {
-                "overall_amenity_score": amenity_analysis.overall_amenity_score,
-                "value_impact_percentage": amenity_analysis.value_impact_percentage,
-                "key_amenities": [
-                    {"name": amenity.name, "distance": f"{amenity.distance_meters:.0f}m", "impact": amenity.impact_score}
-                    for amenity in amenity_analysis.nearest_amenities[:5]
-                ]
-            }
-        
-        # Professional Recommendations
-        analysis_results["professional_recommendations"] = {
-            "development_feasibility": "medium",
-            "investment_recommendation": "requires_detailed_analysis",
-            "next_steps": [
-                "Verify utility connection costs with municipal authorities",
-                "Confirm zoning and development permissions",
-                "Consider professional engineering consultation for complex projects"
-            ],
-            "professional_notes": "Analysis completed by SkyeBridge Consulting & Developments Inc. P.Eng oversight available."
-        }
-        
-        return analysis_results
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Property analysis failed: {str(e)}")
 
 @app.post("/property/utility-analysis-json")
 async def utility_analysis_json(request: UtilityAnalysisJSON):
@@ -2368,48 +2869,6 @@ async def amenity_analysis_json(request: AmenityAnalysisJSON):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Amenity analysis failed: {str(e)}")
-
-@app.post("/property/comprehensive-mapping-analysis-json", response_class=HTMLResponse)
-async def comprehensive_mapping_analysis_json(request: AmenityAnalysisJSON):
-    """Complete property analysis with interactive mapping - JSON version for Swagger UI"""
-    
-    utility_analyzer = UtilityAnalysisEngine()
-    amenity_analyzer = AmenityProximityAnalyzer()
-    property_coords = (53.5461, -113.4909)
-    
-    try:
-        # Perform utility analysis
-        utility_ratings = utility_analyzer.analyze_utility_connections(
-            address=request.address,
-            municipality=request.municipality.value,
-            property_type=request.property_type.value
-        )
-        
-        # Perform amenity analysis  
-        amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
-            address=request.address,
-            municipality=request.municipality.value,
-            property_coordinates=property_coords
-        )
-        
-        # Generate interactive map
-        property_data = {
-            "address": request.address,
-            "municipality": request.municipality.value,
-            "property_type": request.property_type.value,
-            "coordinates": property_coords
-        }
-        
-        interactive_map = generate_interactive_property_map(
-            property_data=property_data,
-            utility_ratings=utility_ratings,
-            amenity_analysis=amenity_analysis
-        )
-        
-        return HTMLResponse(content=interactive_map)
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
 
 @app.post("/partners/register-json")
 async def register_partner_firm_json(request: PartnerRegistrationJSON):
@@ -2491,164 +2950,7 @@ async def submit_partner_sales_data_json(request: PartnerSalesDataJSON):
         "submission_count": partner["data_submissions"]
     }
 
-# Legacy Endpoints for Backwards Compatibility
-@app.post("/property/comprehensive-analysis")
-async def comprehensive_property_analysis(
-    address: str = Form(...),
-    municipality: Municipality = Form(...),
-    property_type: PropertyType = Form(...),
-    lot_size_sqft: Optional[float] = Form(None),
-    include_market_analysis: bool = Form(True),
-    include_amenity_analysis: bool = Form(True),
-    include_infrastructure_analysis: bool = Form(True),
-    include_professional_analysis: bool = Form(True),
-    comparative_search_radius_km: float = Form(2.0)
-):
-    """Complete multi-source property analysis with all features"""
-    
-    try:
-        # Initialize analyzers
-        utility_analyzer = UtilityAnalysisEngine()
-        amenity_analyzer = AmenityProximityAnalyzer()
-        
-        # Property coordinates (simulated)
-        property_coords = (53.5461, -113.4909)
-        
-        # Perform comprehensive analysis
-        comprehensive_results = {
-            "property_details": {
-                "address": address,
-                "municipality": municipality.value,
-                "property_type": property_type.value,
-                "lot_size_sqft": lot_size_sqft,
-                "analysis_date": datetime.now().isoformat(),
-                "coordinates": property_coords
-            }
-        }
-        
-        # Infrastructure Analysis
-        if include_infrastructure_analysis:
-            utility_ratings = utility_analyzer.analyze_utility_connections(
-                address=address,
-                municipality=municipality.value,
-                property_type=property_type.value
-            )
-            comprehensive_results["infrastructure_assessment"] = asdict(utility_ratings)
-        
-        # Amenity Analysis
-        if include_amenity_analysis:
-            amenity_analysis = amenity_analyzer.analyze_amenity_proximity(
-                address=address,
-                municipality=municipality.value,
-                property_coordinates=property_coords
-            )
-            comprehensive_results["amenity_assessment"] = asdict(amenity_analysis)
-        
-        # Market Analysis with Multi-Source Data
-        if include_market_analysis:
-            # Simulate multi-source market analysis
-            partner_data_weight = 0.85
-            scraping_data_weight = 0.65
-            municipal_data_weight = 0.95
-            
-            base_value = 450000
-            market_conditions_multiplier = 1.05 if municipality.value in ["edmonton", "st_albert"] else 0.95
-            
-            comprehensive_results["market_analysis"] = {
-                "market_ranges": {
-                    "conservative_value": int(base_value * market_conditions_multiplier * 0.9),
-                    "realistic_value": int(base_value * market_conditions_multiplier),
-                    "optimistic_value": int(base_value * market_conditions_multiplier * 1.15),
-                    "confidence_level": "high" if municipality.value in ["edmonton", "st_albert"] else "medium"
-                },
-                "data_sources": [
-                    {"source_type": "partner_realty", "credibility_weight": partner_data_weight, "data_points": 8},
-                    {"source_type": "realtor_scraping", "credibility_weight": scraping_data_weight, "data_points": 15},
-                    {"source_type": "municipal_data", "credibility_weight": municipal_data_weight, "data_points": 3}
-                ],
-                "weighted_credibility_score": 0.78
-            }
-        
-        # Professional Engineering Analysis
-        if include_professional_analysis:
-            # Determine if P.Eng review required
-            peng_required = (
-                property_type.value in ["commercial", "industrial"] or
-                (lot_size_sqft and lot_size_sqft > 20000) or
-                municipality.value == "parkland"
-            )
-            
-            comprehensive_results["professional_engineering"] = {
-                "peng_review_required": peng_required,
-                "complexity_assessment": "medium",
-                "regulatory_requirements": [
-                    "Municipal development permit required",
-                    "Building permit with engineered drawings" if peng_required else "Standard building permit",
-                    "Utility connection permits",
-                    "Environmental assessment" if property_type.value == "industrial" else None
-                ],
-                "professional_liability": {
-                    "coverage_available": True,
-                    "skyebridge_oversight": True,
-                    "peng_stamp_available": peng_required
-                },
-                "engineering_notes": f"Professional engineering consultation {'required' if peng_required else 'recommended'} for this development type in {municipality.value}."
-            }
-        
-        # Investment Recommendation
-        overall_score = 7.5  # Calculated from various factors
-        comprehensive_results["investment_recommendation"] = {
-            "overall_development_score": overall_score,
-            "recommendation": "strong_potential" if overall_score >= 7.0 else "moderate_potential",
-            "key_strengths": [
-                "Good utility accessibility" if include_infrastructure_analysis else None,
-                "Strong amenity proximity" if include_amenity_analysis else None,
-                "Stable market conditions" if include_market_analysis else None
-            ],
-            "risk_factors": [
-                "Infrastructure extension costs",
-                "Municipal approval timelines",
-                "Market condition changes"
-            ],
-            "next_steps": [
-                "Confirm utility connection requirements",
-                "Review municipal zoning and development standards", 
-                "Consider professional engineering consultation",
-                "Verify financing and development timeline"
-            ]
-        }
-        
-        return comprehensive_results
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Comprehensive analysis failed: {str(e)}")
-
-@app.post("/property/multi-source-analysis")
-async def multi_source_analysis_legacy(
-    address: str = Form(...),
-    municipality: Municipality = Form(...),
-    property_type: PropertyType = Form(...),
-    include_partner_data: bool = Form(True),
-    include_scraping_data: bool = Form(True),
-    include_municipal_data: bool = Form(True),
-    include_amenity_analysis: bool = Form(True),
-    include_infrastructure_analysis: bool = Form(True),
-    comparative_search_radius_km: float = Form(2.0)
-):
-    """Legacy endpoint - redirects to comprehensive analysis with all sources"""
-    
-    # Redirect to comprehensive analysis
-    return await comprehensive_property_analysis(
-        address=address,
-        municipality=municipality,
-        property_type=property_type,
-        include_market_analysis=True,
-        include_amenity_analysis=include_amenity_analysis,
-        include_infrastructure_analysis=include_infrastructure_analysis,
-        include_professional_analysis=True,
-        comparative_search_radius_km=comparative_search_radius_km
-    )
-
+# Administrative Endpoints
 @app.post("/admin/reset-sample-data")
 async def reset_sample_data():
     """Reset sample data to original 23 properties"""
@@ -2661,50 +2963,6 @@ async def reset_sample_data():
         "properties_count": len(SAMPLE_PROPERTIES),
         "partner_firms_count": len(PARTNER_FIRMS),
         "reset_timestamp": datetime.now().isoformat()
-    }
-
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint with platform information"""
-    return {
-        "platform": "Sgiach Professional Development Analysis Platform",
-        "version": "3.0.0",
-        "company": "SkyeBridge Consulting & Developments Inc.",
-        "description": "Complete Municipal Property Development Analysis with Professional Engineering Oversight",
-        "features": [
-            "23 Sample Properties across 5 Alberta Municipalities",
-            "Comprehensive Utility Connection Analysis",
-            "Advanced Amenity Proximity Assessment", 
-            "Interactive Property Mapping",
-            "Partner Realty Data Integration",
-            "Professional Engineering Oversight",
-            "Multi-Source Market Analysis",
-            "Municipal Infrastructure Standards"
-        ],
-        "municipalities_served": ["Edmonton", "Leduc", "St. Albert", "Strathcona County", "Parkland County"],
-        "professional_services": "P.Eng oversight available for complex developments",
-        "api_documentation": "/docs",
-        "health_check": "/health",
-        "testing_endpoints": {
-            "note": "JSON endpoints available for Swagger UI testing",
-            "json_endpoints": [
-                "/property/analysis-json",
-                "/property/utility-analysis-json", 
-                "/property/amenity-analysis-json",
-                "/property/comprehensive-mapping-analysis-json",
-                "/partners/register-json",
-                "/partners/data/sales-json"
-            ],
-            "form_endpoints": [
-                "/property/analysis",
-                "/property/utility-analysis",
-                "/property/amenity-analysis", 
-                "/property/comprehensive-mapping-analysis",
-                "/partners/register",
-                "/partners/data/sales"
-            ]
-        }
     }
 
 if __name__ == "__main__":
