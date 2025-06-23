@@ -22,6 +22,9 @@ import asyncio
 import io
 import base64
 from pathlib import Path
+from typing import List, Dict, Optional, Tuple
+import math
+from datetime import datetime
 
 app = FastAPI(
     title="Sgiach Professional Development Analysis Platform",
@@ -132,6 +135,28 @@ class UtilityAnalysisRequest(BaseModel):
     development_type: str
     target_density: Optional[str] = "medium"
 
+class LotAssessment(BaseModel):
+    property_id: str
+    coordinates: Tuple[float, float]
+    lot_size_sqft: float
+    municipality: str
+    zoning: str
+
+class PlacedBuilding(BaseModel):
+    building_type: str
+    position_x: float
+    position_y: float
+    width: float
+    height: float
+    building_id: str
+
+class DevelopmentPlan(BaseModel):
+    property_id: str
+    buildings: List[PlacedBuilding]
+    total_coverage_sqft: float
+    compliance_status: str
+    estimated_cost: float
+    
 #==============================================================================
 # ALBERTA UTILITY INFRASTRUCTURE DATABASE
 #==============================================================================
