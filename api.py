@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 import math
 from datetime import datetime
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Sgiach Professional Development Analysis Platform",
@@ -2952,6 +2953,10 @@ async def submit_partner_sales_data_json(request: PartnerSalesDataJSON):
 
 # Administrative Endpoints
 @app.post("/admin/reset-sample-data")
+
+# Add this line with your other app setup
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 async def reset_sample_data():
     """Reset sample data to original 23 properties"""
     
