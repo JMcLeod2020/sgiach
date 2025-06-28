@@ -27,12 +27,6 @@ import math
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(
-    title="Sgiach Professional Development Analysis Platform",
-    description="Complete Municipal Property Development Analysis with Professional Engineering Oversight", 
-    version="3.0.0"
-)
-
 # Mount static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
