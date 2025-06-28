@@ -29,6 +29,15 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="Sgiach Professional Development Analysis Platform",
+    description="Complete Municipal Property Development Analysis with Professional Engineering Oversight", 
+    version="3.0.0"
+)
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app = FastAPI(
+    title="Sgiach Professional Development Analysis Platform",
     description="Complete Municipal Property Development Analysis with Professional Engineering Oversight",
     version="3.0.0"
 )
@@ -2954,8 +2963,6 @@ async def submit_partner_sales_data_json(request: PartnerSalesDataJSON):
 # Administrative Endpoints
 @app.post("/admin/reset-sample-data")
 
-# Add this line with your other app setup
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 async def reset_sample_data():
     """Reset sample data to original 23 properties"""
